@@ -12,10 +12,10 @@ namespace ProjFinal.Data
             {
             }
             public DbSet<Book> Books { get; set; }
-            public DbSet<Book> BookImage { get; set; }
-            public DbSet<Book> Category { get; set; }
-            public DbSet<Book> Purchase { get; set; }
-            public DbSet<Book> PurchaseItem { get; set; }
+            public DbSet<BookImage> BookImages { get; set; }
+            public DbSet<Category> Categories { get; set; }
+            public DbSet<Purchase> Purchases { get; set; }
+            public DbSet<PurchaseItem> PurchaseItems { get; set; }
         }
     }
 
