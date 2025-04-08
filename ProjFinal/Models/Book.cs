@@ -1,0 +1,24 @@
+﻿namespace ProjFinal.Models
+{
+    public class Book
+    {
+        public int Id { get; set; }
+
+        public string Title { get; set; }
+
+        public string Author { get; set; }
+
+        public string Description { get; set; }
+
+        public decimal Price { get; set; }
+
+        public DateTime PublishedDate { get; set; }
+
+        public string FileUrl { get; set; }
+
+        public ICollection<BookImage> Images { get; set; }
+
+        public ICollection<Category> Categories { get; set; }
+
+    }
+}
