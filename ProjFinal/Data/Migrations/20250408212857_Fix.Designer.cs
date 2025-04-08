@@ -12,8 +12,8 @@ using ProjFinal.Data.YourProjectNamespace.Data;
 namespace ProjFinal.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250408205850_Correction")]
-    partial class Correction
+    [Migration("20250408212857_Fix")]
+    partial class Fix
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
