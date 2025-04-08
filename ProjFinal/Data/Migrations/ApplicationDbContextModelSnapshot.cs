@@ -69,7 +69,7 @@ namespace ProjFinal.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Book");
+                    b.ToTable("Books");
                 });
 
             modelBuilder.Entity("ProjFinal.Models.BookImage", b =>
@@ -94,7 +94,7 @@ namespace ProjFinal.Migrations
 
                     b.HasIndex("BookId");
 
-                    b.ToTable("BookImage");
+                    b.ToTable("BookImages");
                 });
 
             modelBuilder.Entity("ProjFinal.Models.Category", b =>
@@ -115,7 +115,55 @@ namespace ProjFinal.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Category");
+                    b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("ProjFinal.Models.Purchase", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Purchases");
+                });
+
+            modelBuilder.Entity("ProjFinal.Models.PurchaseItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BookId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PurchaseId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookId");
+
+                    b.HasIndex("PurchaseId");
+
+                    b.ToTable("PurchaseItems");
                 });
 
             modelBuilder.Entity("BookCategory", b =>
@@ -144,9 +192,33 @@ namespace ProjFinal.Migrations
                     b.Navigation("Book");
                 });
 
+            modelBuilder.Entity("ProjFinal.Models.PurchaseItem", b =>
+                {
+                    b.HasOne("ProjFinal.Models.Book", "Book")
+                        .WithMany()
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProjFinal.Models.Purchase", "Purchase")
+                        .WithMany("Items")
+                        .HasForeignKey("PurchaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("Purchase");
+                });
+
             modelBuilder.Entity("ProjFinal.Models.Book", b =>
                 {
                     b.Navigation("Images");
+                });
+
+            modelBuilder.Entity("ProjFinal.Models.Purchase", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }
