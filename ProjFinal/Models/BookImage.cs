@@ -8,7 +8,6 @@ namespace ProjFinal.Models
         public int Id { get; set; }
 
         [Required(ErrorMessage = "A {0} é obrigatória.")]
-        [Url(ErrorMessage = "Insira uma imagem válida.")]
         [Display(Name = "Imagem")]
         public string Image { get; set; }
 

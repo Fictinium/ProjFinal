@@ -10,22 +10,23 @@ using ProjFinal.Models;
 
 namespace ProjFinal.Controllers
 {
-    public class BooksController : Controller
+    public class PurchaseItemsController : Controller
     {
         private readonly ApplicationDbContext _context;
 
-        public BooksController(ApplicationDbContext context)
+        public PurchaseItemsController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // GET: Books
+        // GET: PurchaseItems
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Books.ToListAsync());
+            var applicationDbContext = _context.PurchaseItems.Include(p => p.Book).Include(p => p.Purchase);
+            return View(await applicationDbContext.ToListAsync());
         }
 
-        // GET: Books/Details/5
+        // GET: PurchaseItems/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -33,39 +34,45 @@ namespace ProjFinal.Controllers
                 return NotFound();
             }
 
-            var book = await _context.Books
+            var purchaseItem = await _context.PurchaseItems
+                .Include(p => p.Book)
+                .Include(p => p.Purchase)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (book == null)
+            if (purchaseItem == null)
             {
                 return NotFound();
             }
 
-            return View(book);
+            return View(purchaseItem);
         }
 
-        // GET: Books/Create
+        // GET: PurchaseItems/Create
         public IActionResult Create()
         {
+            ViewData["BookId"] = new SelectList(_context.Books, "Id", "Author");
+            ViewData["PurchaseId"] = new SelectList(_context.Purchases, "Id", "Id");
             return View();
         }
 
-        // POST: Books/Create
+        // POST: PurchaseItems/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Author,Description,Price,PublishedDate,BookFile")] Book book)
+        public async Task<IActionResult> Create([Bind("Id,Quantity,PurchaseId,BookId")] PurchaseItem purchaseItem)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(book);
+                _context.Add(purchaseItem);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(book);
+            ViewData["BookId"] = new SelectList(_context.Books, "Id", "Author", purchaseItem.BookId);
+            ViewData["PurchaseId"] = new SelectList(_context.Purchases, "Id", "Id", purchaseItem.PurchaseId);
+            return View(purchaseItem);
         }
 
-        // GET: Books/Edit/5
+        // GET: PurchaseItems/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -73,22 +80,24 @@ namespace ProjFinal.Controllers
                 return NotFound();
             }
 
-            var book = await _context.Books.FindAsync(id);
-            if (book == null)
+            var purchaseItem = await _context.PurchaseItems.FindAsync(id);
+            if (purchaseItem == null)
             {
                 return NotFound();
             }
-            return View(book);
+            ViewData["BookId"] = new SelectList(_context.Books, "Id", "Author", purchaseItem.BookId);
+            ViewData["PurchaseId"] = new SelectList(_context.Purchases, "Id", "Id", purchaseItem.PurchaseId);
+            return View(purchaseItem);
         }
 
-        // POST: Books/Edit/5
+        // POST: PurchaseItems/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Author,Description,Price,PublishedDate,BookFile")] Book book)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Quantity,PurchaseId,BookId")] PurchaseItem purchaseItem)
         {
-            if (id != book.Id)
+            if (id != purchaseItem.Id)
             {
                 return NotFound();
             }
@@ -97,12 +106,12 @@ namespace ProjFinal.Controllers
             {
                 try
                 {
-                    _context.Update(book);
+                    _context.Update(purchaseItem);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!BookExists(book.Id))
+                    if (!PurchaseItemExists(purchaseItem.Id))
                     {
                         return NotFound();
                     }
@@ -113,10 +122,12 @@ namespace ProjFinal.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(book);
+            ViewData["BookId"] = new SelectList(_context.Books, "Id", "Author", purchaseItem.BookId);
+            ViewData["PurchaseId"] = new SelectList(_context.Purchases, "Id", "Id", purchaseItem.PurchaseId);
+            return View(purchaseItem);
         }
 
-        // GET: Books/Delete/5
+        // GET: PurchaseItems/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -124,34 +135,36 @@ namespace ProjFinal.Controllers
                 return NotFound();
             }
 
-            var book = await _context.Books
+            var purchaseItem = await _context.PurchaseItems
+                .Include(p => p.Book)
+                .Include(p => p.Purchase)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (book == null)
+            if (purchaseItem == null)
             {
                 return NotFound();
             }
 
-            return View(book);
+            return View(purchaseItem);
         }
 
-        // POST: Books/Delete/5
+        // POST: PurchaseItems/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var book = await _context.Books.FindAsync(id);
-            if (book != null)
+            var purchaseItem = await _context.PurchaseItems.FindAsync(id);
+            if (purchaseItem != null)
             {
-                _context.Books.Remove(book);
+                _context.PurchaseItems.Remove(purchaseItem);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool BookExists(int id)
+        private bool PurchaseItemExists(int id)
         {
-            return _context.Books.Any(e => e.Id == id);
+            return _context.PurchaseItems.Any(e => e.Id == id);
         }
     }
 }

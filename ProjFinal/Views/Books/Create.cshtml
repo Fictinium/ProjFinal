@@ -1,56 +1,76 @@
 ﻿@model ProjFinal.Models.Book
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Criar Livro";
 }
 
-<h1>Create</h1>
+<h1>Criar um Livro</h1>
 
-<h4>Book</h4>
 <hr />
 <div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
+    <div class="col-md-8">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <!-- Título -->
             <div class="form-group">
                 <label asp-for="Title" class="control-label"></label>
                 <input asp-for="Title" class="form-control" />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
+
+            <!-- Autor -->
             <div class="form-group">
                 <label asp-for="Author" class="control-label"></label>
                 <input asp-for="Author" class="form-control" />
                 <span asp-validation-for="Author" class="text-danger"></span>
             </div>
+
+            <!-- Descrição -->
             <div class="form-group">
                 <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
+                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
+
+            <!-- Preço -->
             <div class="form-group">
-                <label asp-for="Price" class="control-label"></label>
-                <input asp-for="Price" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
+                <label asp-for="AuxPrice" class="control-label"></label>
+                <input asp-for="AuxPrice" class="form-control" />
+                <span asp-validation-for="AuxPrice" class="text-danger"></span>
             </div>
+
+            <!-- Data de Publicação -->
             <div class="form-group">
                 <label asp-for="PublishedDate" class="control-label"></label>
-                <input asp-for="PublishedDate" class="form-control" />
+                <input asp-for="PublishedDate" type="date" class="form-control" />
                 <span asp-validation-for="PublishedDate" class="text-danger"></span>
             </div>
+
+            <!-- Ficheiro (Livro) -->
             <div class="form-group">
-                <label asp-for="FileUrl" class="control-label"></label>
-                <input asp-for="FileUrl" class="form-control" />
-                <span asp-validation-for="FileUrl" class="text-danger"></span>
+                <label class="control-label">Ficheiro do Livro</label>
+                <input name="BookFile" type="file" class="form-control" accept=".pdf" />
+                <span asp-validation-for="BookFile" class="text-danger"></span>
             </div>
+
+            <!-- Categorias -->
             <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+                <label asp-for="Categories" class="control-label"></label>
+                <select asp-for="Categories" class="form-control" asp-items="ViewBag.CategoryIds" multiple></select>
+                <span asp-validation-for="Categories" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mt-3">
+                <input type="submit" value="Criar" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
             </div>
         </form>
     </div>
 </div>
 
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Index">Voltar</a>
 </div>
 
 @section Scripts {

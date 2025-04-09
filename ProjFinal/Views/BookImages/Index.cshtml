@@ -1,4 +1,4 @@
-﻿@model IEnumerable<ProjFinal.Models.Purchase>
+﻿@model IEnumerable<ProjFinal.Models.BookImage>
 
 @{
     ViewData["Title"] = "Index";
@@ -7,19 +7,19 @@
 <h1>Index</h1>
 
 <p>
-    <a asp-action="Create">Criar Compra</a>
+    <a asp-action="Create">Criar Imagem</a>
 </p>
 <table class="table">
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.TotalPrice)
+                @Html.DisplayNameFor(model => model.Image)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.PurchaseDate)
+                @Html.DisplayNameFor(model => model.PageNumber)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Status)
+                @Html.DisplayNameFor(model => model.Book)
             </th>
             <th></th>
         </tr>
@@ -28,13 +28,13 @@
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.TotalPrice)
+                @Html.DisplayFor(modelItem => item.Image)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.PurchaseDate)
+                @Html.DisplayFor(modelItem => item.PageNumber)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Status)
+                @Html.DisplayFor(modelItem => item.Book.Author)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Editar</a> |

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProjFinal.Models
 {
@@ -6,10 +7,15 @@ namespace ProjFinal.Models
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "O {0} é obrigatório.")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "O preço total deve ser maior que 0 euros.")]
         [Display(Name = "Preço Total")]
         public decimal TotalPrice { get; set; }
+
+        [NotMapped]
+        [Display(Name = "Preço Total")]
+        [Required(ErrorMessage = "O {0} é obrigatório.")]
+        [StringLength(15)]
+        [RegularExpression("[0-9]{1,12}([,.][0-9]{1,2})?", ErrorMessage = "Só são aceites algarismos. Pode escrever duas casas decimais, separadas por . ou ,")]
+        public string AuxTotalPrice { get; set; }
 
         [Required(ErrorMessage = "A {0} é obrigatória.")]
         [DataType(DataType.DateTime)]
