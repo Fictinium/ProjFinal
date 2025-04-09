@@ -6,13 +6,13 @@ namespace ProjFinal.Models
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "O preço total é obrigatório.")]
+        [Required(ErrorMessage = "O {0} é obrigatório.")]
         [Range(0.01, double.MaxValue, ErrorMessage = "O preço total deve ser maior que 0 euros.")]
         [Display(Name = "Preço Total")]
         public decimal TotalPrice { get; set; }
 
-        [Required(ErrorMessage = "A data de compra é obrigatória.")]
-        [DataType(DataType.Date)]
+        [Required(ErrorMessage = "A {0} é obrigatória.")]
+        [DataType(DataType.DateTime)]
         [Display(Name = "Data de Compra")]
         public DateTime PurchaseDate { get; set; }
 

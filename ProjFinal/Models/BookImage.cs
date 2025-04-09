@@ -7,17 +7,17 @@ namespace ProjFinal.Models
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "O URL da imagem é obrigatório.")]
-        [Url(ErrorMessage = "Insira um URL válido para a imagem.")]
-        [Display(Name = "URL da Imagem")]
-        public string ImageUrl { get; set; }
+        [Required(ErrorMessage = "A {0} é obrigatória.")]
+        [Url(ErrorMessage = "Insira uma imagem válida.")]
+        [Display(Name = "Imagem")]
+        public string Image { get; set; }
 
-        [Required(ErrorMessage = "O número da página é obrigatório.")]
+        [Required(ErrorMessage = "O {0} é obrigatório.")]
         [Range(1, int.MaxValue, ErrorMessage = "O número da página deve ser maior que zero.")]
         [Display(Name = "Número da Página")]
         public int PageNumber { get; set; }
 
-        [Required(ErrorMessage = "O livro associado é obrigatório.")]
+        [Required(ErrorMessage = "O {0} associado é obrigatório.")]
         [Display(Name = "Livro")]
         public int BookId { get; set; }
         [ForeignKey("BookId")]
