@@ -33,16 +33,15 @@ namespace ProjFinal.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var book = await _context.Books
+                .Include(b => b.Categories)
+                .Include(b => b.Images)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (book == null)
-            {
                 return NotFound();
-            }
 
             return View(book);
         }
@@ -61,7 +60,7 @@ namespace ProjFinal.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Title,Author,Description,AuxPrice,PublishedDate,Categories")] Book book, IFormFile bookFile)
+        public async Task<IActionResult> Create([Bind("Title,Author,Description,AuxPrice,PublishedDate,Categories")] Book book, IFormFile bookFile, List<IFormFile> pageImages)
         {
             bool hasError = false;
 
@@ -117,6 +116,39 @@ namespace ProjFinal.Controllers
                 _context.Add(book);
                 await _context.SaveChangesAsync();
 
+                // Guardar imagens de páginas, se fornecidas
+                if (pageImages != null && pageImages.Any())
+                {
+                    int pageNumber = 1;
+                    string imageFolder = Path.Combine(_webHostEnvironment.WebRootPath, "bookpages");
+
+                    if (!Directory.Exists(imageFolder))
+                        Directory.CreateDirectory(imageFolder);
+
+                    foreach (var image in pageImages)
+                    {
+                        if (image.ContentType != "image/jpeg" && image.ContentType != "image/png")
+                            continue; // ignorar ficheiros inválidos
+
+                        string imageName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName).ToLowerInvariant();
+                        string imagePath = Path.Combine(imageFolder, imageName);
+
+                        using var imageStream = new FileStream(imagePath, FileMode.Create);
+                        await image.CopyToAsync(imageStream);
+
+                        var bookImage = new BookImage
+                        {
+                            BookId = book.Id,
+                            PageNumber = pageNumber++,
+                            Image = Path.Combine("bookpages", imageName).Replace("\\", "/")
+                        };
+
+                        _context.BookImages.Add(bookImage);
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+
                 return RedirectToAction(nameof(Index));
             }
 
@@ -158,7 +190,7 @@ namespace ProjFinal.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Author,Description,AuxPrice,PublishedDate,FileUrl")] Book book, IFormFile ficheiroLivro, List<int> selectedCategoryIds)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Author,Description,AuxPrice,PublishedDate,FileUrl")] Book book, IFormFile ficheiroLivro, List<int> selectedCategoryIds, List<IFormFile> pageImages)
         {
             if (id != book.Id)
                 return NotFound();
@@ -243,6 +275,48 @@ namespace ProjFinal.Controllers
                     existingBook.Categories = _context.Categories
                         .Where(c => selectedCategoryIds.Contains(c.Id))
                         .ToList();
+
+                    // Substituir imagens de páginas (se forem fornecidas novas)
+                    if (pageImages != null && pageImages.Any())
+                    {
+                        // Apagar imagens antigas do disco
+                        foreach (var img in existingBook.Images)
+                        {
+                            string imgPath = Path.Combine(_webHostEnvironment.WebRootPath, img.Image ?? "");
+                            if (System.IO.File.Exists(imgPath))
+                                System.IO.File.Delete(imgPath);
+                        }
+
+                        // Remover entradas antigas da BD
+                        _context.BookImages.RemoveRange(existingBook.Images);
+
+                        // Adicionar novas imagens
+                        string imageFolder = Path.Combine(_webHostEnvironment.WebRootPath, "bookpages");
+                        if (!Directory.Exists(imageFolder))
+                            Directory.CreateDirectory(imageFolder);
+
+                        int pageNumber = 1;
+                        foreach (var image in pageImages)
+                        {
+                            if (image.ContentType != "image/jpeg" && image.ContentType != "image/png")
+                                continue;
+
+                            string imageName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName).ToLowerInvariant();
+                            string imagePath = Path.Combine(imageFolder, imageName);
+
+                            using var imageStream = new FileStream(imagePath, FileMode.Create);
+                            await image.CopyToAsync(imageStream);
+
+                            var newImage = new BookImage
+                            {
+                                BookId = existingBook.Id,
+                                PageNumber = pageNumber++,
+                                Image = Path.Combine("bookpages", imageName).Replace("\\", "/")
+                            };
+
+                            _context.BookImages.Add(newImage);
+                        }
+                    }
 
                     await _context.SaveChangesAsync();
                 }

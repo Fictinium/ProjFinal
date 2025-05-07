@@ -1,27 +1,17 @@
-﻿@model ProjFinal.Models.Book
+﻿@model YourNamespace.Models.Book
 
 @{
     ViewData["Title"] = "Editar Livro";
 }
 
-<h1>Editar o Livro</h1>
+<h1>@ViewData["Title"]</h1>
 
-<hr />
 <div class="row">
     <div class="col-md-8">
         <form asp-action="Edit" method="post" enctype="multipart/form-data">
             <input type="hidden" asp-for="Id" />
 
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <!-- Livro atual (se houver) -->
-            @if (!string.IsNullOrEmpty(Model.BookFile))
-            {
-                <div class="form-group mb-2">
-                    <label class="form-label">Livro atual:</label><br />
-                    <a href="~/@Model.BookFile" target="_blank">Download</a>
-                </div>
-            }
 
             <!-- Título -->
             <div class="form-group">
@@ -40,11 +30,11 @@
             <!-- Descrição -->
             <div class="form-group">
                 <label asp-for="Description" class="control-label"></label>
-                <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
-            <!-- Preço (auxiliar) -->
+            <!-- Preço -->
             <div class="form-group">
                 <label asp-for="AuxPrice" class="control-label"></label>
                 <input asp-for="AuxPrice" class="form-control" />
@@ -58,30 +48,56 @@
                 <span asp-validation-for="PublishedDate" class="text-danger"></span>
             </div>
 
-            <!-- Ficheiro do Livro -->
+            <!-- Ficheiro Atual (PDF) -->
+            @if (!string.IsNullOrEmpty(Model.FileUrl))
+            {
+                <div class="form-group mb-2">
+                    <label class="form-label">Ficheiro Atual:</label><br />
+                    <span>@Model.FileUrl</span>
+                </div>
+            }
+
+            <!-- Substituir Ficheiro -->
             <div class="form-group">
-                <label asp-for="BookFile" class="control-label"></label>
-                <input asp-for="BookFile" type="file" class="form-control" accept=".pdf" />
-                <span asp-validation-for="BookFile" class="text-danger"></span>
+                <label class="control-label">Substituir Ficheiro PDF</label>
+                <input type="file" name="ficheiroLivro" class="form-control" accept=".pdf" />
+            </div>
+
+            <!-- Imagens Atuais -->
+            @if (Model.Images != null && Model.Images.Any())
+            {
+                <div class="form-group mb-2">
+                    <label class="form-label">Imagens Atuais:</label><br />
+                    <div class="row">
+                        @foreach (var img in Model.Images.OrderBy(i => i.PageNumber))
+                        {
+                            <div class="col-4 mb-2">
+                                <img src="~/@img.Image" alt="Página @img.PageNumber" class="img-fluid border rounded" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Substituir Imagens -->
+            <div class="form-group">
+                <label class="control-label">Substituir Imagens das Páginas</label>
+                <input type="file" name="pageImages" multiple class="form-control" accept=".jpg,.jpeg,.png" />
             </div>
 
             <!-- Categorias -->
             <div class="form-group">
-                <label asp-for="Categories" class="control-label"></label>
-                <select asp-for="Categories" class="form-control" asp-items="ViewBag.CategoryIds" multiple></select>
-                <span asp-validation-for="Categories" class="text-danger"></span>
+                <label class="control-label">Categorias</label>
+                <select asp-for="Categories" class="form-control" asp-items="ViewBag.CategoryList" multiple></select>
             </div>
 
+            <!-- Botões -->
             <div class="form-group mt-3">
-                <input type="submit" value="Guardar" class="btn btn-primary" />
+                <input type="submit" value="Guardar Alterações" class="btn btn-primary" />
                 <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Voltar</a>
 </div>
 
 @section Scripts {

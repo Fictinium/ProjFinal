@@ -13,152 +13,60 @@ namespace ProjFinal.Controllers
     public class BookImagesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public BookImagesController(ApplicationDbContext context)
+        public BookImagesController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
-        // GET: BookImages
-        public async Task<IActionResult> Index()
-        {
-            var applicationDbContext = _context.BookImages.Include(b => b.Book);
-            return View(await applicationDbContext.ToListAsync());
-        }
-
-        // GET: BookImages/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var bookImage = await _context.BookImages
-                .Include(b => b.Book)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (bookImage == null)
-            {
-                return NotFound();
-            }
-
-            return View(bookImage);
-        }
-
-        // GET: BookImages/Create
-        public IActionResult Create()
-        {
-            ViewData["BookId"] = new SelectList(_context.Books, "Id", "Author");
-            return View();
-        }
-
-        // POST: BookImages/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: BookImages/Create (used from form or AJAX when uploading preview pages)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Image,PageNumber,BookId")] BookImage bookImage)
+        public async Task<IActionResult> Create([Bind("PageNumber,BookId")] BookImage bookImage, IFormFile imageFile)
         {
-            if (ModelState.IsValid)
+            if (imageFile == null || imageFile.ContentType != "image/jpeg" && imageFile.ContentType != "image/png")
             {
-                _context.Add(bookImage);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["BookId"] = new SelectList(_context.Books, "Id", "Author", bookImage.BookId);
-            return View(bookImage);
-        }
-
-        // GET: BookImages/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
+                ModelState.AddModelError("", "Tem de submeter uma imagem em formato JPEG ou PNG.");
+                return View(bookImage);
             }
 
-            var bookImage = await _context.BookImages.FindAsync(id);
-            if (bookImage == null)
-            {
-                return NotFound();
-            }
-            ViewData["BookId"] = new SelectList(_context.Books, "Id", "Author", bookImage.BookId);
-            return View(bookImage);
-        }
+            // Guardar o ficheiro
+            var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(imageFile.FileName);
+            var savePath = Path.Combine(_webHostEnvironment.WebRootPath, "bookpages");
+            Directory.CreateDirectory(savePath);
+            var fullPath = Path.Combine(savePath, uniqueFileName);
 
-        // POST: BookImages/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Image,PageNumber,BookId")] BookImage bookImage)
-        {
-            if (id != bookImage.Id)
-            {
-                return NotFound();
-            }
+            using var stream = new FileStream(fullPath, FileMode.Create);
+            await imageFile.CopyToAsync(stream);
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(bookImage);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!BookImageExists(bookImage.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["BookId"] = new SelectList(_context.Books, "Id", "Author", bookImage.BookId);
-            return View(bookImage);
-        }
+            bookImage.Image = Path.Combine("bookpages", uniqueFileName).Replace("\\", "/");
 
-        // GET: BookImages/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            _context.Add(bookImage);
+            await _context.SaveChangesAsync();
 
-            var bookImage = await _context.BookImages
-                .Include(b => b.Book)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (bookImage == null)
-            {
-                return NotFound();
-            }
-
-            return View(bookImage);
+            return RedirectToAction("Details", "Books", new { id = bookImage.BookId });
         }
 
         // POST: BookImages/Delete/5
-        [HttpPost, ActionName("Delete")]
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var bookImage = await _context.BookImages.FindAsync(id);
             if (bookImage != null)
             {
+                // Apagar ficheiro
+                var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, bookImage.Image ?? "");
+                if (System.IO.File.Exists(fullPath))
+                    System.IO.File.Delete(fullPath);
+
                 _context.BookImages.Remove(bookImage);
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool BookImageExists(int id)
-        {
-            return _context.BookImages.Any(e => e.Id == id);
+            return RedirectToAction("Details", "Books", new { id = bookImage?.BookId });
         }
     }
 }
