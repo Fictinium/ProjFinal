@@ -7,30 +7,46 @@
 <h1>Detalhes da Compra</h1>
 
 <div>
-    <h4>Compra</h4>
-    <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TotalPrice)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TotalPrice)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PurchaseDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PurchaseDate)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
+        <dt class="col-sm-3">Data da Compra</dt>
+        <dd class="col-sm-9">@Model.PurchaseDate.ToString("dd/MM/yyyy HH:mm")</dd>
+
+        <dt class="col-sm-3">Estado</dt>
+        <dd class="col-sm-9">@Model.Status</dd>
     </dl>
+
+    <h4>Livros Comprados</h4>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Preço Unitário</th>
+                <th>Quantidade</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>@item.Book.Title</td>
+                    <td>@item.Price.ToString("C2", new System.Globalization.CultureInfo("pt-PT"))</td>
+                    <td>@item.Quantity</td>
+                    <td>@(item.Price * item.Quantity).ToString("C2", new System.Globalization.CultureInfo("pt-PT"))</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="3" class="text-end">Total:</th>
+                <th>
+                    @Model.Items.Sum(i => i.Price * i.Quantity)
+                    .ToString("C2", new System.Globalization.CultureInfo("pt-PT"))
+                </th>
+            </tr>
+        </tfoot>
+    </table>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Editar</a> |
+<div>   
     <a asp-action="Index">Voltar</a>
 </div>

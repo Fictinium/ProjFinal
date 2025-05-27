@@ -1,47 +1,64 @@
 ﻿@model IEnumerable<ProjFinal.Models.Purchase>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Compras realizadas";
+
+    // Opcional: mapa de classes CSS por estado
+    Func<PurchaseStatus, string> getBadgeClass = status =>
+    {
+        return status switch
+        {
+            PurchaseStatus.Pending => "badge bg-warning text-dark",
+            PurchaseStatus.Paid => "badge bg-info text-dark",
+            PurchaseStatus.Completed => "badge bg-success",
+            PurchaseStatus.Cancelled => "badge bg-danger",
+            PurchaseStatus.Refunded => "badge bg-secondary",
+            _ => "badge bg-light text-dark"
+        };
+    };
 }
 
-<h1>Index</h1>
+<h1>@ViewData["Title"]</h1>
 
 <p>
     <a asp-action="Create">Criar Compra</a>
 </p>
-<table class="table">
+<table class="table table-striped table-bordered align-middle">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.TotalPrice)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PurchaseDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
+            <th>Data</th>
+            <th>Estado</th>
+            <th>Livros</th>
+            <th>Total</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.TotalPrice)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PurchaseDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Editar</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Detalhes</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Remover</a>
-            </td>
-        </tr>
-}
+        @foreach (var compra in Model)
+        {
+            var total = compra.Items.Sum(i => i.Price * i.Quantity);
+
+            <tr>
+                <td>@compra.PurchaseDate.ToString("dd/MM/yyyy HH:mm")</td>
+                <td>
+                    <span class="@getBadgeClass(compra.Status)">
+                        @compra.Status
+                    </span>
+                </td>
+                <td>
+                    <ul class="mb-0">
+                        @foreach (var item in compra.Items)
+                        {
+                            <li>@item.Book.Title (x@item.Quantity)</li>
+                        }
+                    </ul>
+                </td>
+                <td>@total.ToString("C2", new System.Globalization.CultureInfo("pt-PT"))</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@compra.Id" class="btn btn-sm btn-outline-primary">Detalhes</a>
+                    <a asp-action="Edit" asp-route-id="@compra.Id" class="btn btn-sm btn-outline-secondary">Editar Estado</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

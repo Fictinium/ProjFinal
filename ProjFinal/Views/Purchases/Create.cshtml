@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Criar Compra";
+    var books = (SelectList)ViewBag.Books;
 }
 
 <h1>Criar uma Compra</h1>
@@ -11,7 +12,37 @@
     <div class="col-md-4">
         <form asp-action="Create" method="post" enctype="multipart/form-data">
 
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Livro</th>
+                        <th>Quantidade</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="book-rows">
+                    <tr>
+                        <td>
+                            <select name="bookIds" class="form-control">
+                                @foreach (var book in books)
+                                {
+                                    <option value="@book.Value">@book.Text</option>
+                                }
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number" name="quantities" class="form-control" min="1" value="1" />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove();">Remover</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button type="button" class="btn btn-secondary mb-3" onclick="addBookRow()">Adicionar Livro</button>
 
             <!-- Preço total -->
             <div class="form-group">
@@ -49,5 +80,13 @@
 </div>
 
 @section Scripts {
+    <script>
+        function addBookRow() {
+            var row = document.querySelector("#book-rows tr").cloneNode(true);
+            row.querySelector("input[name='quantities']").value = 1;
+            document.getElementById("book-rows").appendChild(row);
+        }
+    </script>
+
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }

@@ -1,4 +1,4 @@
-﻿@model YourNamespace.Models.Book
+﻿@model ProjFinal.Models.Book
 
 @{
     ViewData["Title"] = "Editar Livro";
@@ -49,11 +49,11 @@
             </div>
 
             <!-- Ficheiro Atual (PDF) -->
-            @if (!string.IsNullOrEmpty(Model.FileUrl))
+            @if (!string.IsNullOrEmpty(Model.BookFile))
             {
                 <div class="form-group mb-2">
                     <label class="form-label">Ficheiro Atual:</label><br />
-                    <span>@Model.FileUrl</span>
+                    <span>@Model.BookFile</span>
                 </div>
             }
 

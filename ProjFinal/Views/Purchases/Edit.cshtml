@@ -14,27 +14,21 @@
 
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             
-            <!-- Preço total -->
             <div class="form-group">
-                <label asp-for="AuxTotalPrice" class="control-label"></label>
-                <input asp-for="AuxTotalPrice" class="form-control" />
-                <span asp-validation-for="AuxTotalPrice" class="text-danger"></span>
+                <label class="control-label">Estado Atual:</label>
+                <p><strong>@Model.Status</strong></p>
             </div>
 
-            <!-- Data de compra -->
             <div class="form-group">
-                <label asp-for="PurchaseDate" class="control-label"></label>
-                <input asp-for="PurchaseDate" type="date" class="form-control" />
-                <span asp-validation-for="PurchaseDate" class="text-danger"></span>
-            </div>
+                <label for="Status">Novo Estado</label>
+                <select name="Status" class="form-control">
+                    @foreach (var item in (List<SelectListItem>)ViewBag.StatusList)
+                    {
+                        var selectedAttr = item.Value == Model.Status.ToString() ? "selected=\"selected\"" : "";
 
-            <!-- Estado da compra -->
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <select asp-for="Status" class="form-control" asp-items="ViewBag.Status">
-                    <option value="">Selecione um estado</option>
+                        @:<option value="@item.Value" @Html.Raw(selectedAttr)>@item.Text</option>
+                    }
                 </select>
-                <span asp-validation-for="Status" class="text-danger"></span>
             </div>
 
             <div class="form-group mt-3">

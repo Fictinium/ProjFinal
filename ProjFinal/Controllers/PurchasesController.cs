@@ -19,65 +19,123 @@ namespace ProjFinal.Controllers
             _context = context;
         }
 
-        // GET: Purchases
+        // GET: Purchase/Index
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Purchases.ToListAsync());
+            // Obter todas as compras com os livros incluídos
+            var purchases = await _context.Purchases
+                .Include(p => p.Items)
+                    .ThenInclude(i => i.Book)
+                .OrderByDescending(p => p.PurchaseDate)
+                .ToListAsync();
+
+            return View(purchases);
         }
 
-        // GET: Purchases/Details/5
+        // GET: Purchase/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var purchase = await _context.Purchases
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .Include(p => p.Items)
+                    .ThenInclude(i => i.Book)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
             if (purchase == null)
-            {
                 return NotFound();
-            }
 
             return View(purchase);
         }
 
-        // GET: Purchases/Create
+        // GET: Purchase/Create
         public IActionResult Create()
         {
+            // Para simular o carrinho: mostrar lista de livros para selecionar
+            ViewBag.Books = new SelectList(_context.Books.OrderBy(b => b.Title), "Id", "Title");
             return View();
         }
 
-        // POST: Purchases/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // POST: Purchase/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,TotalPrice,PurchaseDate,Status")] Purchase purchase)
+        public async Task<IActionResult> Create(List<int> bookIds, List<int> quantities)
         {
-            if (ModelState.IsValid)
+            if (bookIds == null || !bookIds.Any() || quantities == null || bookIds.Count != quantities.Count)
             {
-                _context.Add(purchase);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                ModelState.AddModelError("", "Tem de selecionar pelo menos um livro com quantidade válida.");
+                ViewBag.Books = new SelectList(_context.Books.OrderBy(b => b.Title), "Id", "Title");
+                return View();
             }
-            return View(purchase);
+
+            var purchase = new Purchase
+            {
+                PurchaseDate = DateTime.Now,
+                Status = PurchaseStatus.Completed, // por agora, tudo entra como 'completo'
+                Items = new List<PurchaseItem>(),
+                // UserId = "TEMP_USER" // será substituído quando tivermos autenticação
+            };
+
+            for (int i = 0; i < bookIds.Count; i++)
+            {
+                var bookId = bookIds[i];
+                var quantity = quantities[i];
+
+                if (quantity <= 0)
+                    continue;
+
+                var book = await _context.Books.FindAsync(bookId);
+                if (book == null)
+                    continue;
+
+                var item = new PurchaseItem
+                {
+                    BookId = book.Id,
+                    Quantity = quantity,
+                    Price = book.Price
+                };
+
+                purchase.Items.Add(item);
+            }
+
+            if (!purchase.Items.Any())
+            {
+                ModelState.AddModelError("", "Nenhum item válido foi adicionado à compra.");
+                ViewBag.Books = new SelectList(_context.Books.OrderBy(b => b.Title), "Id", "Title");
+                return View();
+            }
+
+            _context.Purchases.Add(purchase);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
-        // GET: Purchases/Edit/5
+        // GET: Purchase/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
-            var purchase = await _context.Purchases.FindAsync(id);
+            var purchase = await _context.Purchases
+                .Include(p => p.Items)
+                .ThenInclude(i => i.Book)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
             if (purchase == null)
-            {
                 return NotFound();
-            }
+
+            // Preparar dropdown com os valores do enum PurchaseStatus
+            ViewBag.StatusList = Enum.GetValues(typeof(PurchaseStatus))
+                                     .Cast<PurchaseStatus>()
+                                     .Select(s => new SelectListItem
+                                     {
+                                         Value = s.ToString(),
+                                         Text = s.ToString()
+                                     })
+                                     .ToList();
+
             return View(purchase);
         }
 
@@ -86,34 +144,18 @@ namespace ProjFinal.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,TotalPrice,PurchaseDate,Status")] Purchase purchase)
+        public async Task<IActionResult> Edit(int id, PurchaseStatus Status)
         {
-            if (id != purchase.Id)
-            {
-                return NotFound();
-            }
+            var purchase = await _context.Purchases.FindAsync(id);
 
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(purchase);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!PurchaseExists(purchase.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(purchase);
+            if (purchase == null)
+                return NotFound();
+
+            // Atualizar apenas o estado da compra
+            purchase.Status = Status;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Purchases/Delete/5
