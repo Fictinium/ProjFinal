@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using ProjFinal.Data.YourProjectNamespace.Data;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using ProjFinal.Data;
 using ProjFinal.Models;
-using Microsoft.Extensions.DependencyInjection; 
+using ProjFinal.Services;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,14 +34,41 @@ builder.Services.AddSession(options => {
 });
 builder.Services.AddDistributedMemoryCache();
 
+// JWT Settings
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+
+builder.Services.AddAuthentication(options => { })
+   .AddCookie("Cookies", options => {
+       options.LoginPath = "/Identity/Account/Login";
+       options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+   })
+   .AddJwtBearer("Bearer", options => {
+       options.TokenValidationParameters = new TokenValidationParameters
+       {
+           ValidateIssuer = true,
+           ValidateAudience = true,
+           ValidateLifetime = true,
+           ValidateIssuerSigningKey = true,
+           ValidIssuer = jwtSettings["Issuer"],
+           ValidAudience = jwtSettings["Audience"],
+           IssuerSigningKey = new SymmetricSecurityKey(key)
+       };
+   });
+
+// configuração do JWT
+builder.Services.AddScoped<JwtService>();
+
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
+}
+else
+{
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -47,6 +77,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// If you place app.UseAuthorization(); before app.UseAuthentication();, it will not detect users correctly, leading to unauthorized errors.
 app.UseAuthentication();
 app.UseAuthorization();
 

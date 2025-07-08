@@ -1,6 +1,4 @@
-﻿using ProjFinal.Models;
-
-namespace ProjFinal.Models
+﻿namespace ProjFinal.Models
 {
     public class User
     {

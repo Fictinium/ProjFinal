@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using ProjFinal.Data.YourProjectNamespace.Data;
+using ProjFinal.Data;
 using ProjFinal.Models;
 
 namespace ProjFinal.Controllers

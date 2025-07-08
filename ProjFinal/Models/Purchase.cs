@@ -17,6 +17,10 @@ namespace ProjFinal.Models
         [RegularExpression("[0-9]{1,12}([,.][0-9]{1,2})?", ErrorMessage = "Só são aceites algarismos. Pode escrever duas casas decimais, separadas por . ou ,")]
         public string AuxTotalPrice { get; set; }
 
+        [Display(Name = "Utilizador")]
+        [Required(ErrorMessage = "O {0} associado é obrigatório.")]
+        public string UserId { get; set; }
+
         [Required(ErrorMessage = "A {0} é obrigatória.")]
         [DataType(DataType.DateTime)]
         [Display(Name = "Data de Compra")]

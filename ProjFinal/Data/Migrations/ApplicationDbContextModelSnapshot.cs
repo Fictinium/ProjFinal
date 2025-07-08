@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using ProjFinal.Data.YourProjectNamespace.Data;
+using ProjFinal.Data;
 
 #nullable disable
 
@@ -351,12 +351,16 @@ namespace ProjFinal.Migrations
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int?>("UserId")
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("UserId1")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId1");
 
                     b.ToTable("Purchases");
                 });
@@ -512,7 +516,7 @@ namespace ProjFinal.Migrations
                 {
                     b.HasOne("ProjFinal.Models.User", null)
                         .WithMany("Purchases")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId1");
                 });
 
             modelBuilder.Entity("ProjFinal.Models.PurchaseItem", b =>

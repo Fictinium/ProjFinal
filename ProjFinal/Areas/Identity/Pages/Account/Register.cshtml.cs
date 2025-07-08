@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using ProjFinal.Data;
-using ProjFinal.Data.YourProjectNamespace.Data;
 using ProjFinal.Models;
 using System;
 using System.Collections.Generic;

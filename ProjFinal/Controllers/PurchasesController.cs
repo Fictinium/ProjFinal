@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using ProjFinal.Data.YourProjectNamespace.Data;
+using ProjFinal.Data;
 using ProjFinal.Models;
+using System.Security.Claims;
 
 namespace ProjFinal.Controllers
 {
@@ -69,12 +66,20 @@ namespace ProjFinal.Controllers
                 return View();
             }
 
+            // Obter o id do utilizador autenticado
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
             var purchase = new Purchase
             {
                 PurchaseDate = DateTime.Now,
-                Status = PurchaseStatus.Completed, // por agora, tudo entra como 'completo'
+                Status = PurchaseStatus.Pending,
                 Items = new List<PurchaseItem>(),
-                // UserId = "TEMP_USER" // será substituído quando tivermos autenticação
+                UserId = userId
             };
 
             for (int i = 0; i < bookIds.Count; i++)
@@ -111,6 +116,7 @@ namespace ProjFinal.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
 
         // GET: Purchase/Edit/5
         public async Task<IActionResult> Edit(int? id)
