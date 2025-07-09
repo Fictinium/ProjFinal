@@ -17,7 +17,7 @@ namespace ProjFinal.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.5")
+                .HasAnnotation("ProductVersion", "9.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -62,6 +62,14 @@ namespace ProjFinal.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "admin-role-id",
+                            Name = "admin",
+                            NormalizedName = "ADMIN"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -151,6 +159,13 @@ namespace ProjFinal.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "admin-user-id",
+                            RoleId = "admin-role-id"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
@@ -241,6 +256,25 @@ namespace ProjFinal.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "admin-user-id",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c2d3e4f5-6789-0123-abcd-ef2345678901",
+                            Email = "admin@digibook.pt",
+                            EmailConfirmed = true,
+                            FullName = "Admin DigiBook",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@DIGIBOOK.PT",
+                            NormalizedUserName = "ADMIN@DIGIBOOK.PT",
+                            PasswordHash = "AQAAAAIAAYagAAAAECSZ2cwxYAlJPswTOYZAxHLkt7MM3C+7R1R/iqrDgsctjjEf2URmhOQ0dtnL1UbsFQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "b1e2c3d4-e5f6-7890-abcd-ef1234567890",
+                            TwoFactorEnabled = false,
+                            UserName = "admin@digibook.pt"
+                        });
                 });
 
             modelBuilder.Entity("ProjFinal.Models.Book", b =>
@@ -276,12 +310,12 @@ namespace ProjFinal.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int?>("UserProfileId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserProfileId");
 
                     b.ToTable("Books");
                 });
@@ -342,6 +376,10 @@ namespace ProjFinal.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ConnectedUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("PurchaseDate")
                         .HasColumnType("datetime2");
 
@@ -351,16 +389,12 @@ namespace ProjFinal.Migrations
                     b.Property<decimal>("TotalPrice")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("UserId1")
+                    b.Property<int?>("UserProfileId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId1");
+                    b.HasIndex("UserProfileId");
 
                     b.ToTable("Purchases");
                 });
@@ -394,7 +428,7 @@ namespace ProjFinal.Migrations
                     b.ToTable("PurchaseItems");
                 });
 
-            modelBuilder.Entity("ProjFinal.Models.User", b =>
+            modelBuilder.Entity("ProjFinal.Models.UserProfile", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -425,7 +459,7 @@ namespace ProjFinal.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("Users");
+                    b.ToTable("UserProfiles");
                 });
 
             modelBuilder.Entity("BookCategory", b =>
@@ -496,9 +530,9 @@ namespace ProjFinal.Migrations
 
             modelBuilder.Entity("ProjFinal.Models.Book", b =>
                 {
-                    b.HasOne("ProjFinal.Models.User", null)
+                    b.HasOne("ProjFinal.Models.UserProfile", null)
                         .WithMany("Books")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserProfileId");
                 });
 
             modelBuilder.Entity("ProjFinal.Models.BookImage", b =>
@@ -514,9 +548,9 @@ namespace ProjFinal.Migrations
 
             modelBuilder.Entity("ProjFinal.Models.Purchase", b =>
                 {
-                    b.HasOne("ProjFinal.Models.User", null)
+                    b.HasOne("ProjFinal.Models.UserProfile", null)
                         .WithMany("Purchases")
-                        .HasForeignKey("UserId1");
+                        .HasForeignKey("UserProfileId");
                 });
 
             modelBuilder.Entity("ProjFinal.Models.PurchaseItem", b =>
@@ -538,7 +572,7 @@ namespace ProjFinal.Migrations
                     b.Navigation("Purchase");
                 });
 
-            modelBuilder.Entity("ProjFinal.Models.User", b =>
+            modelBuilder.Entity("ProjFinal.Models.UserProfile", b =>
                 {
                     b.HasOne("ProjFinal.Models.ApplicationUser", "ApplicationUser")
                         .WithMany()
@@ -557,7 +591,7 @@ namespace ProjFinal.Migrations
                     b.Navigation("Items");
                 });
 
-            modelBuilder.Entity("ProjFinal.Models.User", b =>
+            modelBuilder.Entity("ProjFinal.Models.UserProfile", b =>
                 {
                     b.Navigation("Books");
 

@@ -19,7 +19,7 @@ namespace ProjFinal.Models
 
         [Display(Name = "Utilizador")]
         [Required(ErrorMessage = "O {0} associado é obrigatório.")]
-        public string UserId { get; set; }
+        public string ConnectedUserId { get; set; }
 
         [Required(ErrorMessage = "A {0} é obrigatória.")]
         [DataType(DataType.DateTime)]

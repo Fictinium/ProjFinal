@@ -134,13 +134,13 @@ namespace ProjFinal.Areas.Identity.Pages.Account
                     _logger.LogInformation("Utilizador criado com uma nova conta e password.");
 
                     // Criar Utilizador associado na tabela de domínio
-                    var utilizador = new User
+                    var utilizador = new UserProfile
                     {
                         Name = Input.FullName, // assumes InputModel has FullName
                         IdentityUserId = user.Id
                     };
 
-                    _context.Users.Add(utilizador);
+                    _context.UserProfiles.Add(utilizador);
                     await _context.SaveChangesAsync();
 
                     var userId = await _userManager.GetUserIdAsync(user);

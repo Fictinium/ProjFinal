@@ -7,6 +7,7 @@ using ProjFinal.Models;
 using ProjFinal.Services;
 using System.Text;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.  
@@ -21,9 +22,10 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 // Configurar o uso do IdentityUser como 'utilizador' de autentica��o
 // Se n�o se adicionar � instru��o '.AddRoles' n�o � poss�vel usar os ROLES
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
    .AddRoles<IdentityRole>()
    .AddEntityFrameworkStores<ApplicationDbContext>();
+
 builder.Services.AddControllersWithViews();
 
 // configurar o de uso de 'cookies'

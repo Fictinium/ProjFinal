@@ -5,7 +5,7 @@
 namespace ProjFinal.Migrations
 {
     /// <inheritdoc />
-    public partial class IdentityUser : Migration
+    public partial class UsersNameFix : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

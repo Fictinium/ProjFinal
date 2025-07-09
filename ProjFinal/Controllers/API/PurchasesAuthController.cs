@@ -28,7 +28,7 @@ namespace ProjFinal.Controllers.API
             return await _context.Purchases
                 .Include(p => p.Items)
                     .ThenInclude(i => i.Book)
-                .Include(p => p.UserId)
+                .Include(p => p.ConnectedUserId)
                 .ToListAsync();
         }
 

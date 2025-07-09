@@ -23,10 +23,10 @@ namespace ProjFinal.Services
         public string GenerateToken(ApplicationUser user)
         {
             // Obter configuração JWT
-            var jwtSettings = _config.GetSection("JwtSettings");
+            var jwtSettings = _config.GetSection("Jwt");
 
             // Criar chave de segurança a partir do secret
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]));
 
             // Criar credenciais de assinatura
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

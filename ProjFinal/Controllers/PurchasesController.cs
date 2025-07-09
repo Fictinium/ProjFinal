@@ -79,7 +79,7 @@ namespace ProjFinal.Controllers
                 PurchaseDate = DateTime.Now,
                 Status = PurchaseStatus.Pending,
                 Items = new List<PurchaseItem>(),
-                UserId = userId
+                ConnectedUserId = userId
             };
 
             for (int i = 0; i < bookIds.Count; i++)

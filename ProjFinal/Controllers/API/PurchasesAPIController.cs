@@ -38,7 +38,7 @@ namespace ProjFinal.Controllers.API
             }
 
             var purchases = await _context.Purchases
-                .Where(p => p.UserId == userId)
+                .Where(p => p.ConnectedUserId == userId)
                 .Include(p => p.Items)
                     .ThenInclude(i => i.Book)
                 .ToListAsync();
@@ -64,7 +64,7 @@ namespace ProjFinal.Controllers.API
             var purchase = await _context.Purchases
                 .Include(p => p.Items)
                     .ThenInclude(i => i.Book)
-                .FirstOrDefaultAsync(p => p.Id == id && p.UserId == userId);
+                .FirstOrDefaultAsync(p => p.Id == id && p.ConnectedUserId == userId);
 
             if (purchase == null)
             {
