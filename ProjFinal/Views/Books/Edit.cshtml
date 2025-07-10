@@ -91,13 +91,16 @@
                 <select asp-for="Categories" class="form-control" asp-items="ViewBag.CategoryList" multiple></select>
             </div>
 
-            <!-- Botões -->
             <div class="form-group mt-3">
-                <input type="submit" value="Guardar Alterações" class="btn btn-primary" />
+                <input type="submit" value="Guardar" class="btn btn-primary" />
                 <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
             </div>
         </form>
     </div>
+</div>
+
+<div>
+    <a asp-action="Index">Voltar</a>
 </div>
 
 @section Scripts {
