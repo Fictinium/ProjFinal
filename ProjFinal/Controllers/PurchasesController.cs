@@ -111,8 +111,17 @@ namespace ProjFinal.Controllers
                 return View();
             }
 
-            _context.Purchases.Add(purchase);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _context.Purchases.Add(purchase);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError("", "Ocorreu um erro ao processar a compra.");
+                ViewBag.Books = new SelectList(_context.Books.OrderBy(b => b.Title), "Id", "Title");
+                return View();
+            }
 
             return RedirectToAction(nameof(Index));
         }
@@ -157,9 +166,17 @@ namespace ProjFinal.Controllers
             if (purchase == null)
                 return NotFound();
 
-            // Atualizar apenas o estado da compra
-            purchase.Status = Status;
-            await _context.SaveChangesAsync();
+            try
+            {
+                // Atualizar apenas o estado da compra
+                purchase.Status = Status;
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError("", "Erro ao atualizar o estado da compra.");
+                return View(purchase);
+            }
 
             return RedirectToAction(nameof(Index));
         }
@@ -187,13 +204,21 @@ namespace ProjFinal.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var purchase = await _context.Purchases.FindAsync(id);
-            if (purchase != null)
+            try
             {
-                _context.Purchases.Remove(purchase);
+                var purchase = await _context.Purchases.FindAsync(id);
+                if (purchase != null)
+                {
+                    _context.Purchases.Remove(purchase);
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError("", "Erro ao eliminar a compra.");
+                return RedirectToAction(nameof(Index));
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

@@ -22,12 +22,21 @@ namespace ProjFinal.Controllers
         // GET: Categories
         public async Task<IActionResult> Index()
         {
-            // Obter todas as categorias ordenadas por nome
-            var categorias = await _context.Categories
-                .OrderBy(c => c.Name)
-                .ToListAsync();
+            try
+            {
+                // Obter todas as categorias ordenadas por nome
+                var categorias = await _context.Categories
+                    .OrderBy(c => c.Name)
+                    .ToListAsync();
 
-            return View(categorias);
+                return View(categorias);
+            }
+            catch
+            {
+                // Lidar com falha ao obter dados
+                ModelState.AddModelError("", "Erro ao carregar categorias.");
+                return View(new List<Category>());
+            }
         }
 
         // GET: Categories/Details/5
@@ -38,14 +47,21 @@ namespace ProjFinal.Controllers
                 return NotFound();
             }
 
-            var category = await _context.Categories
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (category == null)
+            try
             {
-                return NotFound();
-            }
+                var category = await _context.Categories
+                    .FirstOrDefaultAsync(m => m.Id == id);
 
-            return View(category);
+                if (category == null)
+                    return NotFound();
+
+                return View(category);
+            }
+            catch
+            {
+                ModelState.AddModelError("", "Erro ao obter detalhes da categoria.");
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         // GET: Categories/Create
@@ -64,10 +80,17 @@ namespace ProjFinal.Controllers
             // Verificar se o modelo é válido
             if (ModelState.IsValid)
             {
-                // Adicionar a nova categoria à base de dados
-                _context.Add(category);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    // Adicionar a nova categoria à base de dados
+                    _context.Add(category);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch
+                {
+                    ModelState.AddModelError("", "Erro ao criar categoria.");
+                }
             }
 
             // Se houver erros, retornar à view com os dados e mensagens
@@ -80,13 +103,21 @@ namespace ProjFinal.Controllers
             if (id == null)
                 return NotFound();
 
-            // Procurar a categoria com o ID indicado
-            var category = await _context.Categories.FindAsync(id);
+            try
+            {
+                // Procurar a categoria com o ID indicado
+                var category = await _context.Categories.FindAsync(id);
 
-            if (category == null)
-                return NotFound();
+                if (category == null)
+                    return NotFound();
 
-            return View(category);
+                return View(category);
+            }
+            catch
+            {
+                ModelState.AddModelError("", "Erro ao carregar categoria.");
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         // POST: Categories/Edit/5
@@ -110,10 +141,14 @@ namespace ProjFinal.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!_context.Categories.Any(e => e.Id == category.Id))
+                    if (!CategoryExists(category.Id))
                         return NotFound();
                     else
                         throw;
+                }
+                catch
+                {
+                    ModelState.AddModelError("", "Erro ao atualizar categoria.");
                 }
             }
 
@@ -127,14 +162,22 @@ namespace ProjFinal.Controllers
             if (id == null)
                 return NotFound();
 
-            var category = await _context.Categories
-                .Include(c => c.Books)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            try
+            {
+                var category = await _context.Categories
+                    .Include(c => c.Books)
+                    .FirstOrDefaultAsync(m => m.Id == id);
 
-            if (category == null)
-                return NotFound();
+                if (category == null)
+                    return NotFound();
 
-            return View(category);
+                return View(category);
+            }
+            catch
+            {
+                ModelState.AddModelError("", "Erro ao carregar categoria para eliminar.");
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         // POST: Categories/Delete/5
@@ -142,23 +185,30 @@ namespace ProjFinal.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var category = await _context.Categories
-        .Include(c => c.Books)
-        .FirstOrDefaultAsync(c => c.Id == id);
-
-            if (category == null)
-                return NotFound();
-
-            // Verificar se existem livros associados
-            if (category.Books.Any())
+            try
             {
-                // Se houver livros, não permitir a eliminação
-                ModelState.AddModelError("", "Não é possível eliminar esta categoria porque ainda existem livros associados.");
-                return View(category);
-            }
+                var category = await _context.Categories
+                    .Include(c => c.Books)
+                    .FirstOrDefaultAsync(c => c.Id == id);
 
-            _context.Categories.Remove(category);
-            await _context.SaveChangesAsync();
+                if (category == null)
+                    return NotFound();
+
+                // Verificar se existem livros associados
+                if (category.Books.Any())
+                {
+                    // Se houver livros, não permitir a eliminação
+                    ModelState.AddModelError("", "Não é possível eliminar esta categoria porque ainda existem livros associados.");
+                    return View(category);
+                }
+
+                _context.Categories.Remove(category);
+                await _context.SaveChangesAsync();
+            }
+            catch
+            {
+                ModelState.AddModelError("", "Erro ao eliminar categoria.");
+            }
 
             return RedirectToAction(nameof(Index));
         }

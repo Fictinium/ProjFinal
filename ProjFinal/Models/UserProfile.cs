@@ -1,21 +1,38 @@
-﻿namespace ProjFinal.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ProjFinal.Models
 {
     public class UserProfile
     {
         public int Id { get; set; }
 
-        public string Name { get; set; }
+        [Required(ErrorMessage = "O {0} é obrigatório.")]
+        [StringLength(100, ErrorMessage = "O nome não pode ultrapassar 100 caracteres.")]
+        [Display(Name = "Nome Completo")]
+        public string Name { get; set; } = string.Empty;
 
-        public string Email { get; set; }
+        [Required(ErrorMessage = "O {0} é obrigatório.")]
+        [EmailAddress(ErrorMessage = "Formato de email inválido.")]
+        [StringLength(100)]
+        [Display(Name = "Email")]
+        public string Email { get; set; } = string.Empty;
 
-        public string Password { get; set; }
+        [Required(ErrorMessage = "A {0} é obrigatória.")]
+        [StringLength(100)]
+        [Display(Name = "Palavra-passe")]
+        public string Password { get; set; } = string.Empty;
 
-        public string IdentityUserId { get; set; }
+        [Required]
+        [Display(Name = "Utilizador Identity")]
+        public string IdentityUserId { get; set; } = string.Empty;
+        [ForeignKey(nameof(IdentityUserId))]
+        public ApplicationUser? ApplicationUser { get; set; }
 
-        public ApplicationUser ApplicationUser { get; set; }
+        [Display(Name = "Compras")]
+        public ICollection<Purchase> Purchases { get; set; } = new List<Purchase>();
 
-        public ICollection<Purchase> Purchases { get; set; }
-
-        public ICollection<Book> Books { get; set; }
+        [Display(Name = "Livros")]
+        public ICollection<Book> Books { get; set; } = new List<Book>();
     }
 }

@@ -9,15 +9,14 @@ namespace ProjFinal.Models
         [Required(ErrorMessage = "O {0} da categoria é obrigatório.")]
         [StringLength(100, ErrorMessage = "O nome não pode ultrapassar 100 caracteres.")]
         [Display(Name = "Nome")]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "A {0} da categoria é obrigatória.")]
         [StringLength(1000, ErrorMessage = "A descrição não pode ultrapassar 1000 caracteres.")]
         [Display(Name = "Descrição")]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         [Display(Name = "Livros")]
-        public ICollection<Book> Books { get; set; }
+        public ICollection<Book> Books { get; set; } = new List<Book>();
     }
-
 }

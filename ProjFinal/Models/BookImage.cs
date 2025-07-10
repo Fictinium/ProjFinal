@@ -9,7 +9,7 @@ namespace ProjFinal.Models
 
         [Required(ErrorMessage = "A {0} é obrigatória.")]
         [Display(Name = "Imagem")]
-        public string Image { get; set; }
+        public string Image { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "O {0} é obrigatório.")]
         [Range(1, int.MaxValue, ErrorMessage = "O número da página deve ser maior que zero.")]
@@ -20,6 +20,6 @@ namespace ProjFinal.Models
         [Display(Name = "Livro")]
         public int BookId { get; set; }
         [ForeignKey("BookId")]
-        public Book Book { get; set; }
+        public Book? Book { get; set; }
     }
 }

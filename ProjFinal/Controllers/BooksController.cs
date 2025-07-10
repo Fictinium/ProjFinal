@@ -97,8 +97,16 @@ namespace ProjFinal.Controllers
                     string filePath = Path.Combine(storageFolder, uniqueFileName);
 
                     // Guardar o ficheiro no disco
-                    using var stream = new FileStream(filePath, FileMode.Create);
-                    await bookFile.CopyToAsync(stream);
+                    try
+                    {
+                        using var stream = new FileStream(filePath, FileMode.Create);
+                        await bookFile.CopyToAsync(stream);
+                    }
+                    catch (Exception)
+                    {
+                        ModelState.AddModelError("", "Erro ao guardar o ficheiro do livro no servidor.");
+                        hasError = true;
+                    }
                 }
             }
 
@@ -109,12 +117,20 @@ namespace ProjFinal.Controllers
             // Verificar se o modelo é válido e não houve erros manuais
             if (ModelState.IsValid && !hasError)
             {
-                // Converter o valor do preço auxiliar para decimal
-                book.Price = Convert.ToDecimal(book.AuxPrice.Replace('.', ','), new CultureInfo("pt-PT"));
+                try
+                {
+                    // Converter o valor do preço auxiliar para decimal
+                    book.Price = Convert.ToDecimal(book.AuxPrice.Replace('.', ','), new CultureInfo("pt-PT"));
 
-                // Adicionar o livro à base de dados
-                _context.Add(book);
-                await _context.SaveChangesAsync();
+                    // Adicionar o livro à base de dados
+                    _context.Add(book);
+                    await _context.SaveChangesAsync();
+                }
+                catch
+                {
+                    ModelState.AddModelError("", "Erro ao guardar o livro na base de dados.");
+                    return View(book);
+                }
 
                 // Guardar imagens de páginas, se fornecidas
                 if (pageImages != null && pageImages.Any())
@@ -133,8 +149,15 @@ namespace ProjFinal.Controllers
                         string imageName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName).ToLowerInvariant();
                         string imagePath = Path.Combine(imageFolder, imageName);
 
-                        using var imageStream = new FileStream(imagePath, FileMode.Create);
-                        await image.CopyToAsync(imageStream);
+                        try
+                        {
+                            using var imageStream = new FileStream(imagePath, FileMode.Create);
+                            await image.CopyToAsync(imageStream);
+                        }
+                        catch
+                        {
+                            continue; // falha ao guardar imagem, ignorar
+                        }
 
                         var bookImage = new BookImage
                         {
@@ -146,7 +169,15 @@ namespace ProjFinal.Controllers
                         _context.BookImages.Add(bookImage);
                     }
 
-                    await _context.SaveChangesAsync();
+                    try
+                    {
+                        await _context.SaveChangesAsync();
+                    }
+                    catch
+                    {
+                        ModelState.AddModelError("", "Erro ao guardar imagens na base de dados.");
+                        return View(book);
+                    }
                 }
 
                 return RedirectToAction(nameof(Index));
@@ -236,17 +267,25 @@ namespace ProjFinal.Controllers
 
                     string fullPath = Path.Combine(storagePath, newFileName);
 
-                    // Guardar novo ficheiro
-                    using var stream = new FileStream(fullPath, FileMode.Create);
-                    await ficheiroLivro.CopyToAsync(stream);
+                    try
+                    {
+                        // Guardar novo ficheiro
+                        using var stream = new FileStream(fullPath, FileMode.Create);
+                        await ficheiroLivro.CopyToAsync(stream);
 
-                    // Apagar o ficheiro anterior (se existir)
-                    string oldFilePath = Path.Combine(storagePath, book.BookFile ?? "");
-                    if (System.IO.File.Exists(oldFilePath))
-                        System.IO.File.Delete(oldFilePath);
+                        // Apagar o ficheiro anterior (se existir)
+                        string oldFilePath = Path.Combine(storagePath, book.BookFile ?? "");
+                        if (System.IO.File.Exists(oldFilePath))
+                            System.IO.File.Delete(oldFilePath);
 
-                    // Atualizar o caminho
-                    book.BookFile = newFileName;
+                        // Atualizar o caminho
+                        book.BookFile = newFileName;
+                    }
+                    catch
+                    {
+                        hasError = true;
+                        ModelState.AddModelError("", "Erro ao guardar o novo ficheiro do livro.");
+                    }
                 }
             }
 
@@ -374,18 +413,32 @@ namespace ProjFinal.Controllers
             // Eliminar o ficheiro do disco, se existir
             if (!string.IsNullOrEmpty(book.BookFile))
             {
-                string filePath = Path.Combine(Directory.GetCurrentDirectory(), "PrivateFiles", "Books", book.BookFile);
-
-                if (System.IO.File.Exists(filePath))
-                    System.IO.File.Delete(filePath);
+                try
+                {
+                    string filePath = Path.Combine(Directory.GetCurrentDirectory(), "PrivateFiles", "Books", book.BookFile);
+                    if (System.IO.File.Exists(filePath))
+                        System.IO.File.Delete(filePath);
+                }
+                catch
+                {
+                    // falha ao eliminar o ficheiro, mas continuar
+                }
             }
 
             // Remover relações com categorias
             book.Categories.Clear();
 
-            // Remover o livro da base de dados
-            _context.Books.Remove(book);
-            await _context.SaveChangesAsync();
+            try
+            {
+                // Remover o livro da base de dados
+                _context.Books.Remove(book);
+                await _context.SaveChangesAsync();
+            }
+            catch
+            {
+                ModelState.AddModelError("", "Erro ao eliminar o livro da base de dados.");
+                return View(book);
+            }
 
             return RedirectToAction(nameof(Index));
         }

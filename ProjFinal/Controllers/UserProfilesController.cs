@@ -212,22 +212,27 @@ namespace ProjFinal.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var userProfile = await _context.UserProfiles
-                .FirstOrDefaultAsync(u => u.Id == id);
-
-            if (userProfile != null)
+            try
             {
-                // Remover ApplicationUser (Identity) associado
-                if (!string.IsNullOrEmpty(userProfile.IdentityUserId))
-                {
-                    var applicationUser = await _userManager.FindByIdAsync(userProfile.IdentityUserId);
-                    if (applicationUser != null)
-                        await _userManager.DeleteAsync(applicationUser);
-                }
+                var userProfile = await _context.UserProfiles
+                    .FirstOrDefaultAsync(u => u.Id == id);
 
-                // Remover UserProfile
-                _context.UserProfiles.Remove(userProfile);
-                await _context.SaveChangesAsync();
+                if (userProfile != null)
+                {
+                    if (!string.IsNullOrEmpty(userProfile.IdentityUserId))
+                    {
+                        var applicationUser = await _userManager.FindByIdAsync(userProfile.IdentityUserId);
+                        if (applicationUser != null)
+                            await _userManager.DeleteAsync(applicationUser);
+                    }
+
+                    _context.UserProfiles.Remove(userProfile);
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Erro ao eliminar o perfil: " + ex.Message);
             }
 
             return RedirectToAction(nameof(Index));

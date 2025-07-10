@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,18 +16,16 @@ builder.Services.AddControllersWithViews();
 
 // Ler do ficheiro 'appsettings.json' os dados da BD  
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-// Define o tipo de BD e a sua 'liga��o'  
+// Define o tipo de BD e a sua ligação
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// Configurar o uso do IdentityUser como 'utilizador' de autentica��o
-// Se n�o se adicionar � instru��o '.AddRoles' n�o � poss�vel usar os ROLES
+// Configurar o uso do IdentityUser como 'utilizador' de autenticação
+// Se não se adicionar à instrução '.AddRoles' não é possível usar os ROLES
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = false)
    .AddRoles<IdentityRole>()
    .AddEntityFrameworkStores<ApplicationDbContext>();
-
-builder.Services.AddControllersWithViews();
 
 // configurar o de uso de 'cookies'
 builder.Services.AddSession(options => {
@@ -40,23 +39,27 @@ builder.Services.AddDistributedMemoryCache();
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
 
-builder.Services.AddAuthentication(options => { })
-   .AddCookie("Cookies", options => {
-       options.LoginPath = "/Identity/Account/Login";
-       options.AccessDeniedPath = "/Identity/Account/AccessDenied";
-   })
-   .AddJwtBearer("Bearer", options => {
-       options.TokenValidationParameters = new TokenValidationParameters
-       {
-           ValidateIssuer = true,
-           ValidateAudience = true,
-           ValidateLifetime = true,
-           ValidateIssuerSigningKey = true,
-           ValidIssuer = jwtSettings["Issuer"],
-           ValidAudience = jwtSettings["Audience"],
-           IssuerSigningKey = new SymmetricSecurityKey(key)
-       };
-   });
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddCookie("Cookies", options => {
+    options.LoginPath = "/Identity/Account/Login";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+})
+.AddJwtBearer("Bearer", options => {
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+});
 
 // configuração do JWT
 builder.Services.AddScoped<JwtService>();

@@ -1,0 +1,48 @@
+﻿@model List<ProjFinal.Models.ViewModels.CartItemViewModel>
+
+@{
+    ViewData["Title"] = "Carrinho de Compras";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (!Model.Any())
+{
+    <p>O carrinho está vazio.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Título</th>
+                <th>Quantidade</th>
+                <th>Preço Unitário</th>
+                <th>Total</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Title</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.Price.ToString("C")</td>
+                    <td>@(item.Quantity* item.Price).ToString("C")</td>
+                    <td>
+                        <form asp-action="RemoveFromCart" method="post">
+                            <input type="hidden" name="bookId" value="@item.BookId" />
+                            <button type="submit" class="btn btn-danger btn-sm">Remover</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <form asp-action="Checkout" method="post">
+        <button type="submit" class="btn btn-success">Finalizar Compra</button>
+    </form>
+}
+

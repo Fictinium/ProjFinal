@@ -15,7 +15,7 @@ namespace ProjFinal.Models
         [Required(ErrorMessage = "O {0} é obrigatório.")]
         [StringLength(15)]
         [RegularExpression("[0-9]{1,12}([,.][0-9]{1,2})?", ErrorMessage = "Só são aceites algarismos. Pode escrever duas casas decimais, separadas por . ou ,")]
-        public string AuxPrice { get; set; }
+        public string AuxPrice { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "A {0} é obrigatória.")]
         [Range(1, int.MaxValue, ErrorMessage = "A quantidade deve ser maior que 0.")]
@@ -26,13 +26,13 @@ namespace ProjFinal.Models
         [Display(Name = "Compra")]
         public int PurchaseId { get; set; }
         [ForeignKey("PurchaseId")]
-        public Purchase Purchase { get; set; }
+        public Purchase? Purchase { get; set; }
 
         [Required(ErrorMessage = "O {0} associado é obrigatório.")]
         [Display(Name = "Livro")]
         public int BookId { get; set; }
         [ForeignKey("BookId")]
-        public Book Book { get; set; }
+        public Book? Book { get; set; }
 
     }
 }

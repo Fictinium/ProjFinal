@@ -63,9 +63,16 @@ namespace ProjFinal.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(purchaseItem);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _context.Add(purchaseItem);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception)
+                {
+                    ModelState.AddModelError("", "Ocorreu um erro ao adicionar o item à compra.");
+                }
             }
             ViewData["BookId"] = new SelectList(_context.Books, "Id", "Author", purchaseItem.BookId);
             ViewData["PurchaseId"] = new SelectList(_context.Purchases, "Id", "Id", purchaseItem.PurchaseId);
@@ -108,19 +115,19 @@ namespace ProjFinal.Controllers
                 {
                     _context.Update(purchaseItem);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!PurchaseItemExists(purchaseItem.Id))
-                    {
                         return NotFound();
-                    }
                     else
-                    {
                         throw;
-                    }
                 }
-                return RedirectToAction(nameof(Index));
+                catch (Exception)
+                {
+                    ModelState.AddModelError("", "Erro ao atualizar o item da compra.");
+                }
             }
             ViewData["BookId"] = new SelectList(_context.Books, "Id", "Author", purchaseItem.BookId);
             ViewData["PurchaseId"] = new SelectList(_context.Purchases, "Id", "Id", purchaseItem.PurchaseId);
@@ -152,13 +159,19 @@ namespace ProjFinal.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var purchaseItem = await _context.PurchaseItems.FindAsync(id);
-            if (purchaseItem != null)
+            try
             {
-                _context.PurchaseItems.Remove(purchaseItem);
+                var purchaseItem = await _context.PurchaseItems.FindAsync(id);
+                if (purchaseItem != null)
+                {
+                    _context.PurchaseItems.Remove(purchaseItem);
+                    await _context.SaveChangesAsync();
+                }
             }
-
-            await _context.SaveChangesAsync();
+            catch (Exception)
+            {
+                ModelState.AddModelError("", "Erro ao eliminar o item da compra.");
+            }
             return RedirectToAction(nameof(Index));
         }
 

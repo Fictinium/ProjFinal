@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using ProjFinal.Models;
 using ProjFinal.Services;
+using ProjFinal.Models.ViewModels;
+
 
 namespace ProjFinal.Controllers.API
 {
@@ -47,12 +49,54 @@ namespace ProjFinal.Controllers.API
             // devolvo o 'token'
             return Ok(new { token });
         }
-    }
 
-    public class LoginRequest
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        {
+            // Validar dados de entrada
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Verificar se o email já está em uso
+            var existingUser = await _userManager.FindByEmailAsync(request.Email);
+            if (existingUser != null)
+                return BadRequest(new { message = "Este email já está registado." });
+
+            // Criar novo ApplicationUser
+            var newUser = new ApplicationUser
+            {
+                UserName = request.Email,
+                Email = request.Email,
+                FullName = request.FullName,
+                EmailConfirmed = true // para testes; em produção deverá enviar email de confirmação
+            };
+
+            var result = await _userManager.CreateAsync(newUser, request.Password);
+
+            if (!result.Succeeded)
+            {
+                // Retornar erros
+                var errors = result.Errors.Select(e => e.Description);
+                return BadRequest(new { errors });
+            }
+
+            // Gerar token JWT para o novo utilizador
+            var token = _tokenService.GenerateToken(newUser);
+
+            // Devolver token e info do utilizador
+            return Ok(new
+            {
+                token,
+                user = new
+                {
+                    newUser.Id,
+                    newUser.FullName,
+                    newUser.Email
+                }
+            });
+        }
+
     }
 }
 
