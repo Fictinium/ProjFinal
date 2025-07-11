@@ -39,7 +39,8 @@ namespace ProjFinal.Areas.Identity.Pages.Account
             IUserStore<ApplicationUser> userStore,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            ApplicationDbContext context)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -47,6 +48,7 @@ namespace ProjFinal.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _context = context;
         }
 
         /// <summary>
@@ -131,17 +133,28 @@ namespace ProjFinal.Areas.Identity.Pages.Account
 
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("Utilizador criado com uma nova conta e password.");
-
-                    // Criar Utilizador associado na tabela de domínio
-                    var utilizador = new UserProfile
+                    try
                     {
-                        Name = Input.FullName, // assumes InputModel has FullName
-                        IdentityUserId = user.Id
-                    };
+                        // Criar Utilizador associado na tabela de domínio
+                        var utilizador = new UserProfile
+                        {
+                            Name = Input.FullName,
+                            Email = Input.Email,
+                            Password = Input.Password,
+                            IdentityUserId = user.Id
+                        };
 
-                    _context.UserProfiles.Add(utilizador);
-                    await _context.SaveChangesAsync();
+                        _context.UserProfiles.Add(utilizador);
+                        await _context.SaveChangesAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        await _userManager.DeleteAsync(user); // rollback
+                        ModelState.AddModelError(string.Empty, "Erro ao criar o perfil de utilizador: " + ex.Message);
+                        return Page();
+                    }
+                    _logger.LogInformation("Utilizador criado com uma nova conta e password.");
+                    
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

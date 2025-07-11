@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProjFinal.Data;
@@ -47,6 +48,7 @@ namespace ProjFinal.Controllers
         }
 
         // GET: Purchase/Create
+        [Authorize(Roles = "admin")]
         public IActionResult Create()
         {
             // Para simular o carrinho: mostrar lista de livros para selecionar
@@ -57,6 +59,7 @@ namespace ProjFinal.Controllers
         // POST: Purchase/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Create(List<int> bookIds, List<int> quantities)
         {
             if (bookIds == null || !bookIds.Any() || quantities == null || bookIds.Count != quantities.Count)
@@ -128,6 +131,7 @@ namespace ProjFinal.Controllers
 
 
         // GET: Purchase/Edit/5
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -159,6 +163,7 @@ namespace ProjFinal.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Edit(int id, PurchaseStatus Status)
         {
             var purchase = await _context.Purchases.FindAsync(id);
@@ -182,6 +187,7 @@ namespace ProjFinal.Controllers
         }
 
         // GET: Purchases/Delete/5
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -202,6 +208,7 @@ namespace ProjFinal.Controllers
         // POST: Purchases/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try

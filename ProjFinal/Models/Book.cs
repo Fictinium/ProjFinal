@@ -37,7 +37,6 @@ namespace ProjFinal.Models
         [Display(Name = "Data de Publicação")]
         public DateTime PublishedDate { get; set; }
 
-        [Required(ErrorMessage = "O {0} é obrigatório.")]
         [Display(Name = "Ficheiro do Livro")]
         public string BookFile { get; set; } = string.Empty;
 

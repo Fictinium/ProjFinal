@@ -18,6 +18,7 @@ namespace ProjFinal.Models
         [Display(Name = "Email")]
         public string Email { get; set; } = string.Empty;
 
+        [NotMapped]
         [Required(ErrorMessage = "A {0} é obrigatória.")]
         [StringLength(100)]
         [Display(Name = "Palavra-passe")]

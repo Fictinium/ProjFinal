@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +49,7 @@ namespace ProjFinal.Controllers
 
 
         // GET: UserProfiles/Create
+        [Authorize(Roles = "admin")]
         public IActionResult Create()
         {
             return View();
@@ -56,6 +58,7 @@ namespace ProjFinal.Controllers
         /// POST: UserProfiles/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Create([Bind("Name,Email,Password")] UserProfile userProfile)
         {
             // Validar modelo recebido
@@ -109,6 +112,7 @@ namespace ProjFinal.Controllers
 
 
         // GET: UserProfiles/Edit/5
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -127,6 +131,7 @@ namespace ProjFinal.Controllers
         // POST: UserProfiles/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Email,Password,IdentityUserId")] UserProfile userProfile)
         {
             if (id != userProfile.Id)
@@ -191,6 +196,7 @@ namespace ProjFinal.Controllers
         }
 
         // GET: UserProfiles/Delete/5
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -210,6 +216,7 @@ namespace ProjFinal.Controllers
         // POST: UserProfiles/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try

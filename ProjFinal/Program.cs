@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -64,6 +65,11 @@ builder.Services.AddAuthentication(options =>
 // configuração do JWT
 builder.Services.AddScoped<JwtService>();
 
+// Potencialmente necessário para a adição de imagens/PDFs
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 314572800; // 300MB
+});
 
 var app = builder.Build();
 
