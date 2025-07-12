@@ -65,7 +65,7 @@ namespace ProjFinal.Controllers
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "admin")]
         // Anotação não recomendada para produção!!
-        // [DisableRequestSizeLimit]
+        [DisableRequestSizeLimit]
         public async Task<IActionResult> Create([Bind("Title,Author,Description,AuxPrice,PublishedDate")] Book book,
                                         IFormFile BookFile,
                                         List<IFormFile> pageImages,
@@ -202,7 +202,7 @@ namespace ProjFinal.Controllers
                         {
                             BookId = book.Id,
                             PageNumber = pageNumber++,
-                            Image = Path.Combine("Books", sanitizedTitle, "BookImages", imageName).Replace("\\", "/")
+                            Image = Path.Combine(folderName, "BookImages", imageName).Replace("\\", "/")
                         };
 
                         _context.BookImages.Add(bookImage);
@@ -519,6 +519,63 @@ namespace ProjFinal.Controllers
         private bool BookExists(int id)
         {
             return _context.Books.Any(e => e.Id == id);
+        }
+
+        // Função para permitir obter imagens de livros diretamente pelo URL
+        [AllowAnonymous]
+        [HttpGet("/BookCovers/{*path}")]
+        public IActionResult GetBookCover(string path)
+        {
+            var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "PrivateFiles", "Books", path);
+
+            if (!System.IO.File.Exists(fullPath))
+                return NotFound();
+
+            var extension = Path.GetExtension(fullPath).ToLowerInvariant();
+
+            var contentType = extension switch
+            {
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                _ => "application/octet-stream" // fallback
+            };
+
+            return PhysicalFile(fullPath, contentType);
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> BookPage(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var book = await _context.Books
+                .Include(b => b.Categories)
+                .Include(b => b.Images)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (book == null)
+                return NotFound();
+
+            return View(book);
+        }
+
+        // Função para fazer download do um livro (PDF)
+        [Authorize]
+        public async Task<IActionResult> Download(int id)
+        {
+            var book = await _context.Books.FindAsync(id);
+            if (book == null || string.IsNullOrEmpty(book.BookFile))
+                return NotFound();
+
+            var fullPath = Path.Combine(Directory.GetCurrentDirectory(), "PrivateFiles", book.BookFile);
+
+            if (!System.IO.File.Exists(fullPath))
+                return NotFound();
+
+            var fileName = Path.GetFileName(fullPath);
+            return PhysicalFile(fullPath, "application/pdf", fileName);
         }
     }
 }

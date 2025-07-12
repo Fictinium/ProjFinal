@@ -1,8 +1,41 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IEnumerable<ProjFinal.Models.Book>
+
+@{
+    ViewData["Title"] = "Início";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center my-5">
+    <h1 class="display-4 fw-bold">Bem-vindo ao DigiBook</h1>
+    <p class="lead text-muted">A tua livraria digital — lê, compra e explora livros digitais numa plataforma moderna e segura.</p>
+</div>
+
+<hr />
+
+<div class="container mt-5">
+    <h2 class="mb-4">Livros em destaque</h2>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+        @foreach (var book in Model)
+        {
+            var coverImage = book.Images?.OrderBy(img => img.PageNumber).FirstOrDefault();
+            var coverPath = coverImage != null
+            ? Url.Content("~/BookCovers/" + coverImage.Image)
+            : Url.Content("~/img/placeholder-cover.png"); // fallback image (opcional)
+
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img src="@coverPath" class="card-img-top" alt="Capa do livro @book.Title" style="object-fit: cover; height: 300px;" />
+                    <div class="card-body">
+                        <h5 class="card-title">@book.Title</h5>
+                        <p class="card-text text-muted">@book.Description</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0 text-center">
+                        <a asp-controller="Books" asp-action="BookPage" asp-route-id="@book.Id" class="btn btn-outline-primary btn-sm">
+                            Ver detalhes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
 </div>

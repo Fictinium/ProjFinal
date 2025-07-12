@@ -1,0 +1,75 @@
+﻿@model IEnumerable<ProjFinal.Models.Book>
+
+@{
+    ViewData["Title"] = "Biblioteca";
+    var selectedCategoryId = ViewBag.SelectedCategoryId as int?;
+    var currentSort = ViewBag.CurrentSort as string;
+    var categories = ViewBag.Categories as List<ProjFinal.Models.Category>;
+}
+
+<h1>Biblioteca</h1>
+
+<form method="get" asp-action="Index" class="row mb-4">
+    <div class="col-md-4">
+        <label class="form-label">Filtrar por categoria</label>
+        <select name="categoryId" class="form-select" onchange="this.form.submit()">
+            <option value="">Todas</option>
+            @foreach (var cat in categories)
+            {
+                var isSelected = cat.Id == selectedCategoryId ? "selected" : "";
+                <option value="@cat.Id" selected="@(cat.Id == selectedCategoryId ? "selected" : null)">
+                    @cat.Name
+                </option>
+            }
+        </select>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Ordenar por</label>
+        <select name="sort" class="form-select" onchange="this.form.submit()">
+            <option value="title" selected="@(currentSort == "title" ? "selected" : null)">Título (A-Z)</option>
+            <option value="title_desc" selected="@(currentSort == "title_desc" ? "selected" : null)">Título (Z-A)</option>
+            <option value="price" selected="@(currentSort == "price" ? "selected" : null)">Preço (Menor)</option>
+            <option value="price_desc" selected="@(currentSort == "price_desc" ? "selected" : null)">Preço (Maior)</option>
+        </select>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Ainda não compraste nenhum livro.</div>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var book in Model)
+        {
+            <div class="list-group-item">
+                <div class="row">
+                    <div class="col-md-2">
+                        @{
+                            var coverImage = book.Images?.OrderBy(img => img.PageNumber).FirstOrDefault();
+                            var coverPath = coverImage != null
+                            ? Url.Content("~/BookCovers/" + coverImage.Image)
+                            : Url.Content("~/img/placeholder-cover.png"); // fallback
+                        }
+                        <img src="@coverPath" class="img-fluid rounded" alt="@book.Title" />
+                    </div>
+
+                    <div class="col-md-10">
+                        <h5>@book.Title</h5>
+                        <p>@book.Description</p>
+                    </div>
+
+                    <div class="text-end">
+                        <a class="btn btn-outline-primary"
+                           asp-controller="Books"
+                           asp-action="Download"
+                           asp-route-id="@book.Id">
+                            <i class="fa-solid fa-download"></i> Transferir PDF
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

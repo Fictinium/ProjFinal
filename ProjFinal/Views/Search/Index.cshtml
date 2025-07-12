@@ -1,0 +1,63 @@
+﻿@using ProjFinal.Models.ViewModels
+@model SearchViewModel
+
+@{
+    ViewData["Title"] = "Pesquisar Livros";
+}
+
+<h2 class="mb-4">Pesquisar Livros</h2>
+
+<form method="get" class="row g-3 mb-4">
+    <div class="col-md-4">
+        <input name="query" class="form-control" placeholder="Título do livro" value="@Model.SearchTerm" />
+    </div>
+    <div class="col-md-3">
+        <select name="categoryId" class="form-select">
+            <option value="">Todas as Categorias</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category.Id" selected="@(category.Id == Model.SelectedCategoryId ? "selected" : null)">
+                    @category.Name
+                </option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <input name="minPrice" class="form-control" placeholder="Preço mínimo" type="number" step="0.01" value="@(Model.MinPrice ?? null)" />
+    </div>
+    <div class="col-md-2">
+        <input name="maxPrice" class="form-control" placeholder="Preço máximo" type="number" step="0.01" value="@(Model.MaxPrice ?? null)" />
+    </div>
+    <div class="col-md-1">
+        <button class="btn btn-primary w-100" type="submit">🔍</button>
+    </div>
+</form>
+
+@if (!Model.Results.Any())
+{
+    <div class="alert alert-info">Nenhum livro encontrado com os critérios inseridos.</div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+        @foreach (var book in Model.Results)
+        {
+            var coverImage = book.Images?.OrderBy(img => img.PageNumber).FirstOrDefault();
+            var coverPath = coverImage != null
+            ? Url.Content("~/BookCovers/" + coverImage.Image)
+            : Url.Content("~/img/placeholder-cover.png"); // fallback image (opcional)
+
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img src="@coverPath" class="card-img-top img-fluid" alt="Capa do livro @book.Title" style="object-fit: cover; height: 300px;" />
+                    <div class="card-body">
+                        <h6 class="card-title text-center">@book.Title</h6>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a asp-controller="Books" asp-action="BookPage" asp-route-id="@book.Id" class="btn btn-outline-primary btn-sm">Ver Detalhes</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

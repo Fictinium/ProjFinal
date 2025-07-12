@@ -28,8 +28,8 @@ else
                 <tr>
                     <td>@item.Title</td>
                     <td>@item.Quantity</td>
-                    <td>@item.Price.ToString("C")</td>
-                    <td>@(item.Quantity* item.Price).ToString("C")</td>
+                    <td>@item.Price.ToString("C", new System.Globalization.CultureInfo("pt-PT"))</td>
+                    <td>@(item.Quantity* item.Price)</td>
                     <td>
                         <form asp-action="RemoveFromCart" method="post">
                             <input type="hidden" name="bookId" value="@item.BookId" />
@@ -41,6 +41,7 @@ else
         </tbody>
     </table>
 
+    <a class="btn btn-secondary" href="javascript:history.back()">Voltar</a>
     <form asp-action="Checkout" method="post">
         <button type="submit" class="btn btn-success">Finalizar Compra</button>
     </form>

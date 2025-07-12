@@ -1,0 +1,92 @@
+﻿@model ProjFinal.Models.Book
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-5">
+            @{
+                var coverImage = Model.Images?.OrderBy(i => i.PageNumber).FirstOrDefault();
+                var coverPath = coverImage != null
+                ? Url.Content("~/BookCovers/" + coverImage.Image)
+                : Url.Content("~/img/placeholder-cover.png");
+            }
+
+            <img src="@coverPath" alt="Capa de @Model.Title" class="img-fluid rounded shadow-sm" style="max-height: 500px; object-fit: cover;" />
+        </div>
+
+        <div class="col-md-7">
+            <h2 class="fw-bold">@Model.Title</h2>
+            <h5 class="text-muted">por @Model.Author</h5>
+            <p class="text-secondary">Publicado em: @Model.PublishedDate.ToString("dd/MM/yyyy")</p>
+
+            <hr />
+
+            <p>@Model.Description</p>
+
+            @if (Model.Categories != null && Model.Categories.Any())
+            {
+                <p>
+                    <strong>Categorias:</strong>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <span class="badge bg-secondary me-1">@category.Name</span>
+                    }
+                </p>
+            }
+
+            <h4 class="text-primary mt-4">Preço: @Model.Price.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("pt-PT"))</h4>
+
+            <div class="mt-4">
+                @if (User.Identity?.IsAuthenticated ?? false)
+                {
+                    <form method="post" asp-controller="Cart" asp-action="AddToCart">
+                        <input type="hidden" name="bookId" value="@Model.Id" />
+                        <button type="submit" class="btn btn-success">
+                            <i class="fa-solid fa-cart-plus me-2"></i>Adicionar ao Carrinho
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-outline-secondary" disabled>
+                        Inicie sessão para comprar livros
+                    </button>
+                }
+
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary ms-2">
+                    <i class="fa-solid fa-arrow-left me-1"></i>Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal HTML -->
+<div class="modal fade" id="cartMessageModal" tabindex="-1" aria-labelledby="cartMessageLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cartMessageLabel">Aviso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                @TempData["CartMessage"]
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        window.onload = function () {
+            const message = '@TempData["CartMessage"]';
+            if (message && message !== '') {
+                const modal = new bootstrap.Modal(document.getElementById('cartMessageModal'));
+                modal.show();
+            }
+        };
+    </script>
+}

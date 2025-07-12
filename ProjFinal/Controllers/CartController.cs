@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ProjFinal.Data;
 using ProjFinal.Helpers;
 using ProjFinal.Models;
@@ -23,8 +24,9 @@ namespace ProjFinal.Controllers
         /// </summary>
         public IActionResult Index()
         {
-            // Obter items do carrinho da sessão
-            var cart = HttpContext.Session.GetObject<List<CartItemViewModel>>("Cart") ?? new List<CartItemViewModel>();
+            // Obter items do carrinho da sessão (do utilizador)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var cart = HttpContext.Session.GetObject<List<CartItemViewModel>>($"Cart_{userId}") ?? new List<CartItemViewModel>();
             return View(cart);
         }
 
@@ -39,33 +41,43 @@ namespace ProjFinal.Controllers
             if (book == null)
                 return NotFound();
 
-            // Obter o carrinho da sessão
-            var cart = HttpContext.Session.GetObject<List<CartItemViewModel>>("Cart") ?? new List<CartItemViewModel>();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Console.WriteLine("Current IdentityUserId: " + userId);
+            var cartKey = $"Cart_{userId}";
+            var cart = HttpContext.Session.GetObject<List<CartItemViewModel>>(cartKey) ?? new List<CartItemViewModel>();
 
             // Verificar se o livro já está no carrinho
-            var existing = cart.FirstOrDefault(c => c.BookId == bookId);
-            if (existing != null)
+            if (cart.Any(c => c.BookId == bookId))
             {
-                // Se existir, apenas aumentar a quantidade
-                existing.Quantity += quantity;
-            }
-            else
-            {
-                // Caso contrário, adicionar novo item
-                cart.Add(new CartItemViewModel
-                {
-                    BookId = book.Id,
-                    Title = book.Title,
-                    Price = book.Price,
-                    Quantity = quantity
-                });
+                TempData["CartMessage"] = "Este livro já está no seu carrinho.";
+                return RedirectToAction("BookPage", "Books", new { id = bookId });
             }
 
-            // Atualizar carrinho na sessão
-            HttpContext.Session.SetObject("Cart", cart);
+            // Verificar se já foi comprado (através do UserProfile)
+            var userProfile = await _context.UserProfiles
+                .Include(p => p.Books)
+                .FirstOrDefaultAsync(p => p.IdentityUserId == userId);
+
+            if (userProfile != null && userProfile.Books.Any(b => b.Id == bookId))
+            {
+                TempData["CartMessage"] = "Este livro já se encontra na sua biblioteca.";
+                return RedirectToAction("BookPage", "Books", new { id = bookId });
+            }
+
+            // Adicionar ao carrinho
+            cart.Add(new CartItemViewModel
+            {
+                BookId = book.Id,
+                Title = book.Title,
+                Price = book.Price,
+                Quantity = quantity
+            });
+
+            HttpContext.Session.SetObject(cartKey, cart);
 
             return RedirectToAction("Index");
         }
+
 
         /// <summary>
         /// Remove um item do carrinho.
@@ -73,10 +85,12 @@ namespace ProjFinal.Controllers
         [HttpPost]
         public IActionResult RemoveFromCart(int bookId)
         {
-            var cart = HttpContext.Session.GetObject<List<CartItemViewModel>>("Cart") ?? new List<CartItemViewModel>();
-            cart.RemoveAll(c => c.BookId == bookId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var cartKey = $"Cart_{userId}";
+            var cart = HttpContext.Session.GetObject<List<CartItemViewModel>>(cartKey) ?? new List<CartItemViewModel>();
 
-            HttpContext.Session.SetObject("Cart", cart);
+            cart.RemoveAll(c => c.BookId == bookId);
+            HttpContext.Session.SetObject(cartKey, cart);
             return RedirectToAction("Index");
         }
 
@@ -86,42 +100,62 @@ namespace ProjFinal.Controllers
         [HttpPost]
         public async Task<IActionResult> Checkout()
         {
-            var cart = HttpContext.Session.GetObject<List<CartItemViewModel>>("Cart");
-            if (cart == null || !cart.Any())
-                return RedirectToAction("Index");
-
-            // Obter o ID do utilizador autenticado
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
                 return Unauthorized();
 
-            // Criar nova compra com os items do carrinho
+            // Get user from Identity to ensure FK is valid
+            var appUser = await _context.Users.FindAsync(userId);
+            if (appUser == null)
+                return Unauthorized(); // Or throw exception if it should never happen
+
+            var cartKey = $"Cart_{userId}";
+            var cart = HttpContext.Session.GetObject<List<CartItemViewModel>>(cartKey);
+            if (cart == null || !cart.Any())
+                return RedirectToAction("Index");
+
             var purchase = new Purchase
             {
-                ConnectedUserId = userId,
+                ConnectedUserId = appUser.Id,
                 PurchaseDate = DateTime.Now,
                 Status = PurchaseStatus.Completed,
-                Items = new List<PurchaseItem>()
-            };
-
-            // Criar um objecto item de compra (PurchaseItem) por cada item do carrinho
-            foreach (var item in cart)
-            {
-                purchase.Items.Add(new PurchaseItem
+                Items = cart.Select(item => new PurchaseItem
                 {
                     BookId = item.BookId,
                     Quantity = item.Quantity,
                     Price = item.Price
-                });
+                }).ToList()
+            };
+
+            purchase.TotalPrice = purchase.Items.Sum(i => i.Price * i.Quantity);
+            _context.Purchases.Add(purchase);
+
+            // Add books to user's library
+            var userProfile = await _context.UserProfiles
+                .Include(p => p.Books)
+                .FirstOrDefaultAsync(p => p.IdentityUserId == userId);
+
+            if (userProfile != null)
+            {
+                var bookIds = cart.Select(i => i.BookId).ToList();
+
+                var booksToAdd = await _context.Books
+                    .Where(b => bookIds.Contains(b.Id))
+                    .ToListAsync();
+
+                foreach (var book in booksToAdd)
+                {
+                    if (!userProfile.Books.Any(b => b.Id == book.Id))
+                    {
+                        userProfile.Books.Add(book);
+                    }
+                }
             }
 
-            _context.Purchases.Add(purchase);
             await _context.SaveChangesAsync();
+            HttpContext.Session.Remove(cartKey);
 
-            // Remover o carrinho da sessão
-            HttpContext.Session.Remove("Cart");
-
-            return RedirectToAction("Details", "Purchases", new { id = purchase.Id });
+            return RedirectToAction("Index", "Library");
         }
     }
 }

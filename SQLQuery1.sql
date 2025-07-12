@@ -1,0 +1,1 @@
+﻿DBCC CHECKIDENT ('BookImages', RESEED, 0);

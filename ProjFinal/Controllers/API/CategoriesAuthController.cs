@@ -8,7 +8,7 @@ namespace ProjFinal.Controllers.API
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = "Bearer")]
+    [Authorize(AuthenticationSchemes = "JwtBearer")]
     public class CategoriesAuthController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
