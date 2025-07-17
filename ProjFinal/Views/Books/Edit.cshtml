@@ -88,8 +88,37 @@
             <!-- Categorias -->
             <div class="form-group">
                 <label class="control-label">Categorias</label>
-                <select asp-for="Categories" class="form-control" asp-items="ViewBag.CategoryList" multiple></select>
+
+                <div class="input-group mb-2">
+                    <select id="categoryDropdown" class="form-control">
+                        <option value="" disabled selected>-- Selecione uma categoria --</option>
+                        @foreach (var item in (MultiSelectList)ViewBag.CategoryList)
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    </select>
+                    <button type="button" class="btn btn-outline-primary" onclick="addCategory()">Adicionar</button>
+                </div>
+
+                <!-- Categorias adicionadas dinamicamente a partir de JS -->
+                <ul id="selectedCategories" class="list-group mb-2">
+                    @foreach (var category in Model.Categories)
+                    {
+                        <li id="cat-li-@category.Id" class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>@category.Name</span>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeCategory('@category.Id')">Remover</button>
+                            <input type="hidden" name="selectedCategoryIds" value="@category.Id" id="cat-input-@category.Id" />
+                        </li>
+
+                    }
+                </ul>
+
+                <!-- "Hidden inputs" enviados ao Controller -->
+                <div id="selectedCategoryInputs"></div>
+
+                <span asp-validation-for="Categories" class="text-danger"></span>
             </div>
+
 
             <div class="form-group mt-3">
                 <input type="submit" value="Guardar" class="btn btn-primary" />
@@ -105,4 +134,38 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        function addCategory() {
+            const dropdown = document.getElementById("categoryDropdown");
+            const selectedValue = dropdown.value;
+            const selectedText = dropdown.options[dropdown.selectedIndex].text;
+
+            if (!selectedValue || selectedValue === "" || document.getElementById("cat-li-" + selectedValue))
+                return; // Evitar cópias (duplicates)
+
+            // Adicionar à lista
+            const li = document.createElement("li");
+            li.id = "cat-li-" + selectedValue;
+            li.className = "list-group-item d-flex justify-content-between align-items-center";
+            li.innerHTML = `
+                <span>${selectedText}</span>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeCategory('${selectedValue}')">Remover</button>
+            `;
+            document.getElementById("selectedCategories").appendChild(li);
+
+            // Adicionar "hidden input"
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "selectedCategoryIds";
+            input.value = selectedValue;
+            input.id = "cat-input-" + selectedValue;
+            document.getElementById("selectedCategoryInputs").appendChild(input);
+        }
+
+        function removeCategory(id) {
+            document.getElementById("cat-li-" + id)?.remove();
+            document.getElementById("cat-input-" + id)?.remove();
+        }
+    </script>
 }

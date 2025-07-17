@@ -222,10 +222,15 @@ namespace ProjFinal.Controllers
             try
             {
                 var userProfile = await _context.UserProfiles
+                    .AsNoTracking()
                     .FirstOrDefaultAsync(u => u.Id == id);
 
                 if (userProfile != null)
                 {
+                    // Remove qualquer associação de livros ao perfil
+                    await _context.Database.ExecuteSqlRawAsync(
+                        "UPDATE Books SET UserProfileId = NULL WHERE UserProfileId = {0}", userProfile.Id);
+
                     if (!string.IsNullOrEmpty(userProfile.IdentityUserId))
                     {
                         var applicationUser = await _userManager.FindByIdAsync(userProfile.IdentityUserId);
@@ -233,6 +238,7 @@ namespace ProjFinal.Controllers
                             await _userManager.DeleteAsync(applicationUser);
                     }
 
+                    _context.UserProfiles.Attach(userProfile);
                     _context.UserProfiles.Remove(userProfile);
                     await _context.SaveChangesAsync();
                 }

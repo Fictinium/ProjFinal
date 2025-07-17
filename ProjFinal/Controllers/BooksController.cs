@@ -260,15 +260,16 @@ namespace ProjFinal.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "admin")]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Author,Description,AuxPrice,PublishedDate,FileUrl")] Book book, IFormFile ficheiroLivro, List<int> selectedCategoryIds, List<IFormFile> pageImages)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Author,Description,AuxPrice,PublishedDate")] Book book, IFormFile ficheiroLivro, List<int> selectedCategoryIds, List<IFormFile> pageImages)
         {
             if (id != book.Id)
                 return NotFound();
 
             bool hasError = false;
 
-            // Remover validação automática para preço
+            // Remover validação automática para preço e ficheiro
             ModelState.Remove("Price");
+            ModelState.Remove("ficheiroLivro");
 
             // Tentar converter o preço auxiliar
             try
@@ -297,7 +298,7 @@ namespace ProjFinal.Controllers
             if (existingBook == null)
                 return NotFound();
 
-            // Criar estrutura de pastas com base no nome do livro
+            // Manter o ficheiro anterior caso não se insira um novo
             string bookFolder = Path.Combine("PrivateFiles", "Books", FileHelpers.SanitizeFolderName(book.Title));
             string fullBookFolderPath = Path.Combine(Directory.GetCurrentDirectory(), bookFolder);
             string imageFolderPath = Path.Combine(fullBookFolderPath, "BookImages");
@@ -308,7 +309,7 @@ namespace ProjFinal.Controllers
             if (!Directory.Exists(imageFolderPath))
                 Directory.CreateDirectory(imageFolderPath);
 
-            // Se for enviado novo ficheiro PDF
+            // Processar novo ficheiro PDF se for enviado
             if (ficheiroLivro != null)
             {
                 if (ficheiroLivro.ContentType != "application/pdf")
@@ -321,7 +322,9 @@ namespace ProjFinal.Controllers
                     try
                     {
                         // Caminho para o novo ficheiro com nome original
-                        string pdfPath = Path.Combine(fullBookFolderPath, Path.GetFileName(ficheiroLivro.FileName));
+                        string extension = Path.GetExtension(ficheiroLivro.FileName);
+                        string safePdfName = $"book_{Guid.NewGuid()}{extension}";
+                        string pdfPath = Path.Combine(fullBookFolderPath, safePdfName);
 
                         // Apagar ficheiro anterior (se existir)
                         if (!string.IsNullOrEmpty(existingBook.BookFile))
@@ -336,7 +339,7 @@ namespace ProjFinal.Controllers
                         await ficheiroLivro.CopyToAsync(stream);
 
                         // Atualizar nome do ficheiro guardado
-                        existingBook.BookFile = Path.GetFileName(ficheiroLivro.FileName);
+                        existingBook.BookFile = Path.Combine("Books", FileHelpers.SanitizeFolderName(book.Title), safePdfName).Replace("\\", "/");
                     }
                     catch
                     {
@@ -344,6 +347,11 @@ namespace ProjFinal.Controllers
                         ModelState.AddModelError("", "Erro ao guardar o novo ficheiro do livro.");
                     }
                 }
+            }
+            else
+            {
+                // Mantém o ficheiro atual
+                existingBook.BookFile = existingBook.BookFile;
             }
 
             // Se tudo estiver válido, proceder com atualização
